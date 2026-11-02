@@ -8,7 +8,7 @@ import './Mapa.css';
 
 const limitesVerticales = L.latLngBounds(
   L.latLng(-60, -180),
-  L.latLng(85, 180) 
+  L.latLng(85, 180)
 );
 
 const FitBoundsHelper = ({ geoJsonData }: { geoJsonData: any }) => {
@@ -18,7 +18,7 @@ const FitBoundsHelper = ({ geoJsonData }: { geoJsonData: any }) => {
     if (geoJsonData) {
       const layer = L.geoJSON(geoJsonData);
       const bounds = layer.getBounds();
-      // Validamos que los límites existan antes de llamar a fitBounds
+
       if (bounds.isValid()) {
         map.fitBounds(bounds);
       }
@@ -38,21 +38,16 @@ const MapaComponente: React.FC<MapaProps> = ({ onSeleccionarRegion }) => {
   useEffect(() => {
     const cargarYCombinarDatos = async () => {
       try {
-        // 1. Cargar las ecorregiones
         const listaEcorregiones = await obtenerEcorregiones();
-
-        // 2. Cargar el GeoJSON de geometrías desde la API
         const respuestaGeoJson = await api.get('/api/ecorregiones');
         const rawGeoJson = respuestaGeoJson.data;
 
-        // 3. Fusionar la propiedad 'contribuciones' en feature.properties
         if (rawGeoJson && rawGeoJson.features) {
           const geoJsonEnriquecido = {
             ...rawGeoJson,
             features: rawGeoJson.features.map((feature: any) => {
               const props = feature.properties || {};
-              const nombreMapa = props.NOMBRE || props.ECO_NAME || props.nombre || '';
-
+              const nombreMapa = (props.NOMBRE || props.ECO_NAME || props.nombre || '').toLowerCase().trim();
               const idMapa = (props.ECO_ID || props.id || '').toString().trim();
 
               const regionDb = listaEcorregiones.find((item) => {
@@ -116,7 +111,6 @@ const MapaComponente: React.FC<MapaProps> = ({ onSeleccionarRegion }) => {
     layer.on({
       click: () => {
         const props = feature.properties || {};
-        console.log('🔍 PROPIEDADES REALES DEL MAPA:', props.contribuciones);
 
         if (onSeleccionarRegion) {
           onSeleccionarRegion({
@@ -139,10 +133,9 @@ const MapaComponente: React.FC<MapaProps> = ({ onSeleccionarRegion }) => {
         zoom={3}
         maxBounds={limitesVerticales}
         minZoom={2}
-        worldCopyJump={true} 
+        worldCopyJump={true}
         style={{ height: '100%', width: '100%' }}
       >
-        {/* Usamos subdominios {s} para solucionar los errores ERR_HTTP2_PROTOCOL_ERROR */}
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           subdomains={['a', 'b', 'c']}

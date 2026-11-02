@@ -1,7 +1,7 @@
-import axios from 'axios';
+import api from '../../api.js';
 
 export interface Ecorregion {
-  id: string | number;
+  id: string;
   nombre: string;
   paises: string;
   resumen: string;
@@ -9,41 +9,22 @@ export interface Ecorregion {
   contribuciones: number;
 }
 
-export const obtenerEcorregiones = async (): Promise<Ecorregion[]> => {
+export async function obtenerEcorregiones(): Promise<Ecorregion[]> {
   try {
-    const res = await axios.get('http://localhost:5000/api/ecorregiones');
-    const datos = res.data;
+    const respuesta = await api.get('/api/ecoregiones');
 
-    // Si viene como array plano de la BD o mock
-    if (Array.isArray(datos)) {
-      return datos.map((item: any, index: number) => ({
-        id: item.id || item.ECO_ID || index,
-        nombre: item.nombre || item.NOMBRE || 'Ecorregión sin nombre',
-        paises: item.paises || item.COUNTRY || 'América Latina',
-        resumen: item.resumen || item.CORRIDOR || item.VEG || 'Sin descripción disponible.',
-        bioma: item.bioma || item.BIOME || 'Ecorregión',
-        contribuciones: item.contribuciones || item.arbolesPlantados || 0,
-      }));
-    } 
-    
-    // Si viene en formato GeoJSON (FeatureCollection)
-    if (datos && Array.isArray(datos.features)) {
-      return datos.features.map((feature: any, index: number) => {
-        const props = feature.properties || {};
-        return {
-          id: props.ECO_ID || props.id || index,
-          nombre: props.NOMBRE || props.ECO_NAME || props.nombre || 'Ecorregión sin nombre',
-          paises: props.COUNTRY || props.paises || 'América Latina',
-          resumen: props.CORRIDOR || props.VEG || props.resumen || 'Sin descripción disponible.',
-          bioma: props.BIOME || props.bioma || 'Ecorregión',
-          contribuciones: props.contribuciones || props.arbolesPlantados || 0,
-        };
-      });
-    }
+    const data = respuesta.data;
 
-    return [];
+    return (Array.isArray(data) ? data : []).map((item: any) => ({
+      id: item.id || '',
+      nombre: item.nombre || '',
+      paises: item.paises || 'América Latina',
+      resumen: item.resumen || item.descripcion || 'Sin descripción disponible.',
+      bioma: item.bioma || 'Ecorregión',
+      contribuciones: item.contribuciones || 0,
+    }));
   } catch (error) {
-    console.error("Error al obtener ecorregiones:", error);
+    console.error('❌ Error al conectar con /api/ecoregiones:', error);
     return [];
   }
-};
+}

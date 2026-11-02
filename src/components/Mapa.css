@@ -1,13 +1,13 @@
 .mapa-wrapper {
   width: 100%;
-  height: calc(100vh - 80px); 
+  height: calc(100vh - 80px);
   position: relative;
   overflow: hidden;
-  background-color: #aad3df !important; 
+  background-color: #aad3df !important;
 }
 
 .leaflet-container {
   width: 100%;
   height: 100% !important;
-  background: #aad3df !important; 
+  background: #aad3df !important;
 }
