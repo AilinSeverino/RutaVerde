@@ -1,6 +1,5 @@
 import { getRegionesConPlantas, getRegionesPorPlanta } from '../services/regionService.js';
 
-// Controller para obtener todas las ecorregiones (usado por el Mapa y la Lista)
 export const obtenerRegiones = async (req, res) => {
   try {
     const ecorregiones = await getRegionesConPlantas();
@@ -17,10 +16,8 @@ export const obtenerRegiones = async (req, res) => {
   }
 };
 
-// Controller para filtrar ecorregiones por el nombre de la planta (usado en SubirBaldosa)
 export const obtenerRegionesPorPlanta = async (req, res) => {
   try {
-    // Soporta recibir la planta como query param ?planta=Ceibo o ?nombrePlanta=Ceibo
     const nombrePlanta = req.query.planta || req.query.nombrePlanta || '';
 
     if (!nombrePlanta) {
@@ -40,6 +37,22 @@ export const obtenerRegionesPorPlanta = async (req, res) => {
     return res.status(500).json({
       success: false,
       error: 'Error al obtener ecorregiones por planta: ' + error.message
+    });
+  }
+};
+
+export const getRegiones = async (req, res) => {
+  try {
+    const data = await getRegionesConPlantas();
+    return res.status(200).json({
+      success: true,
+      data
+    });
+  } catch (error) {
+    console.error('❌ Error en getRegiones:', error);
+    return res.status(500).json({
+      success: false,
+      error: error.message
     });
   }
 };

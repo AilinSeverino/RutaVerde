@@ -1,10 +1,11 @@
 import express from 'express';
-import { publicarNoticia, listarTodasLasNoticias } from '../controllers/noticiaController.js';import { upload } from '../middlewares/multer.js';
+import { publicarNoticia, listarTodasLasNoticias, mejorarNoticia } from '../controllers/noticiaController.js';
+import upload from '../middlewares/multer.js';
 
 const router = express.Router();
 
-// Maneja la petición POST /api/Noticias
+router.get('/', listarTodasLasNoticias);
 router.post('/', upload.single('foto'), publicarNoticia);
-router.get('/todas', listarTodasLasNoticias); // <-- Resuelve /api/noticias/todas
+router.post('/mejorar-ia', mejorarNoticia);
 
 export default router;

@@ -20,11 +20,16 @@ export async function crearBaldosa(req, res) {
     console.log("--- 📥 BODY RECIBIDO EN BALDOSA ---", req.body);
     console.log("--- 📁 ARCHIVO RECIBIDO ---", req.file ? req.file.originalname : 'SIN ARCHIVO');
     try {
-        const { nombrePlanta, idRegion, tamanio, comentarios } = req.body;
+        // 1. Leemos 'idPlanta' (que manda el frontend) o 'nombrePlanta' (si viniera por nombre)
+        const { idPlanta, nombrePlanta, idRegion, tamanio, comentarios } = req.body;
         const archivoImagen = req.file;
 
-        if (!nombrePlanta || !nombrePlanta.trim()) {
-            return res.status(400).json({ success: false, error: "El nombre de la planta es obligatorio." });
+        // Tomamos idPlanta o nombrePlanta
+        const plantaEntrada = idPlanta || nombrePlanta;
+
+        // 2. Validamos que haya llegado alguno
+        if (!plantaEntrada || (typeof plantaEntrada === 'string' && !plantaEntrada.trim())) {
+            return res.status(400).json({ success: false, error: "El nombre o ID de la planta es obligatorio." });
         }
 
         if (!idRegion || isNaN(parseInt(idRegion))) {
@@ -40,12 +45,14 @@ export async function crearBaldosa(req, res) {
             return res.status(400).json({ success: false, error: "El tamaño debe ser entre 1 y 500." });
         }
 
+        // 3. Le pasamos 'plantaEntrada' a baldosaService (tu servicio se encarga del resto)
         const resultado = await baldosaService.subirBaldosa(
-            nombrePlanta.trim(),
+            plantaEntrada,
             parseInt(idRegion),
             tamanioNumero,
             comentarios ? comentarios.trim() : null,
-            archivoImagen
+            archivoImagen,
+            req.usuario?.id // o el idUsuario si lo tenés en la request
         );
 
         console.log("--- 📤 RESULTADO SERVICE ---", resultado);

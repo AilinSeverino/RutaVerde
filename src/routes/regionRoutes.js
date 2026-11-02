@@ -1,12 +1,14 @@
 import { Router } from 'express';
-import { obtenerRegiones, obtenerRegionesPorPlanta } from '../controllers/regionController.js';
+import {
+  obtenerRegiones,
+  obtenerRegionesPorPlanta,
+  getRegiones
+} from '../controllers/regionController.js';
 
 const router = Router();
 
-// Endpoint para obtener las regiones registradas en la BD Supabase
 router.get('/regiones-db', obtenerRegiones);
-
-// Endpoint para filtrar por planta
 router.get('/regiones/por-planta', obtenerRegionesPorPlanta);
+router.get('/regiones', getRegiones);
 
 export default router;
