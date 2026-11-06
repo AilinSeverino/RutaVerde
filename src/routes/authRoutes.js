@@ -9,8 +9,10 @@ const router = express.Router();
 router.post('/registro', validarRegistro, registrarUsuario);
 router.post('/login', loginUsuario);
 router.post('/confirmar-codigo', confirmarCodigoUsuario);
-router.put('/cambiar-nombre', cambiarNombre);
-router.put('/cambiar-foto', upload.single('foto'), cambiarFotoPerfil);
+
+// Perfil
+router.put('/perfil/nombre', cambiarNombre);
+router.put('/perfil/foto', upload.single('foto'), cambiarFotoPerfil);
 
 export default router;
 

@@ -16,6 +16,15 @@ export async function cambiarEstado(req, res) {
     const resu = await baldosaService.actualizarEstadoBaldosa(id, aprobada);
     return res.status(resu.success ? 200 : 400).json(resu);
 }
+export async function eliminarBaldosa(req, res) {
+    try {
+        const { id } = req.params;
+        const resu = await baldosaService.eliminarBaldosa(id);
+        return res.status(resu.success ? 200 : 400).json(resu);
+    } catch (error) {
+        return res.status(500).json({ success: false, error: error.message });
+    }
+}
 export async function crearBaldosa(req, res) {
     console.log("--- 📥 BODY RECIBIDO EN BALDOSA ---", req.body);
     console.log("--- 📁 ARCHIVO RECIBIDO ---", req.file ? req.file.originalname : 'SIN ARCHIVO');

@@ -1,8 +1,11 @@
 import express from 'express';
-import { listarUsuarios } from '../controllers/usuarioController.js';
+import { listarUsuarios, actualizarUsuario, cambiarRolUsuario, eliminarUsuario } from '../controllers/usuarioController.js';
 
 const router = express.Router();
 
 router.get('/', listarUsuarios);
+router.patch('/:id', actualizarUsuario);
+router.patch('/:id/rol', cambiarRolUsuario);
+router.delete('/:id', eliminarUsuario);
 
 export default router;

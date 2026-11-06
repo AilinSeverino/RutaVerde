@@ -13,7 +13,8 @@ export async function obtenerTodasLasNoticias() {
     const noticiasFormateadas = (data || []).map((n) => {
       let estadoTexto = 'pendiente';
       if (n.aprobada === true) estadoTexto = 'publicada';
-      if (n.aprobada === false) estadoTexto = 'papelera';
+      // En este flujo, false significa "pendiente de aprobación" y no "papelera".
+      if (n.aprobada === false) estadoTexto = 'pendiente';
 
       return {
         id: n.id_noticia,
@@ -82,6 +83,47 @@ export async function actualizarEstadoNoticia(idNoticia, aprobada) {
     return { success: false, error: error.message };
   }
 }
+
+// --- NUEVO: Editar Noticia (Backoffice) ---
+export async function editarNoticia(idNoticia, campos) {
+  try {
+    const payload = { ...campos };
+
+    if (payload.titulo !== undefined) payload.titulo = String(payload.titulo).trim();
+    if (payload.cuerpo !== undefined) payload.cuerpo = String(payload.cuerpo).trim();
+    if (payload.contenido !== undefined) payload.cuerpo = String(payload.contenido).trim();
+
+    const { data, error } = await supabase
+      .from('Noticias')
+      .update(payload)
+      .eq('id_noticia', idNoticia)
+      .select();
+
+    if (error) return { success: false, error: error.message };
+    if (!data || data.length === 0) return { success: false, error: 'No se encontró la noticia.' };
+
+    return { success: true, data: data[0] };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+// --- NUEVO: Eliminar Noticia (Backoffice) ---
+export async function eliminarNoticia(idNoticia) {
+  try {
+    const { data, error } = await supabase
+      .from('Noticias')
+      .delete()
+      .eq('id_noticia', idNoticia)
+      .select();
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: data[0] || null };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
 export async function crearNoticia(titulo, contenido, archivoFoto) {
   try {
     if (!titulo || !titulo.trim()) {

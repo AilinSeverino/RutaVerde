@@ -1,5 +1,6 @@
 export const validarRegistro = (req, res, next) => {
-  const { nombre, email, password } = req.body;
+  const { nombre, email, password, contrasenia } = req.body;
+  const clave = password ?? contrasenia;
   const errores = [];
 
   if (!nombre || !nombre.trim()) {
@@ -10,7 +11,7 @@ export const validarRegistro = (req, res, next) => {
     errores.push('El correo electrónico es obligatorio.');
   }
 
-  if (!password) {
+  if (!clave) {
     errores.push('La contraseña es obligatoria.');
   }
 
@@ -23,12 +24,12 @@ export const validarRegistro = (req, res, next) => {
     errores.push('El formato del correo electrónico no es válido.');
   }
 
-  if (password.length < 8) {
+  if (clave.length < 8) {
     errores.push('La contraseña debe tener al menos 8 caracteres.');
   }
   
   const regexPasswordSegura = /^(?=.*[A-Za-z])(?=.*\d)/;
-  if (!regexPasswordSegura.test(password)) {
+  if (!regexPasswordSegura.test(clave)) {
     errores.push('La contraseña debe contener al menos una letra y un número.');
   }
 
@@ -36,5 +37,6 @@ export const validarRegistro = (req, res, next) => {
     return res.status(400).json({ success: false, errores });
   }
 
+  req.body.contrasenia = clave;
   next(); 
 };

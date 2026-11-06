@@ -194,3 +194,18 @@ export async function subirBaldosa(plantaEntrada, idRegion, tamanio, comentarios
     return { success: false, error: error.message };
   }
 }
+
+export async function eliminarBaldosa(idBaldosa) {
+  try {
+    const { data, error } = await supabase
+      .from('Baldosa')
+      .delete()
+      .eq('id_baldosa', idBaldosa)
+      .select();
+
+    if (error) return { success: false, error: error.message };
+    return { success: true, data: data[0] || null };
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
