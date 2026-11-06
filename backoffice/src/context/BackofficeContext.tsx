@@ -55,7 +55,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
     setLoading(true)
     try {
       const [resNoticias, resAportes, resUsuarios] = await Promise.all([
-        fetch(`${API_URL}/noticias/todas`),
+        fetch(`${API_URL}/noticias`),
         fetch(`${API_URL}/baldosas/todas`),
         fetch(`${API_URL}/usuarios`)
       ])
