@@ -82,11 +82,28 @@ export async function listarNoticiasAprobadas(req, res) {
 export async function cambiarEstadoNoticia(req, res) {
   try {
     const { id } = req.params;
-    const { aprobada } = req.body;
+    const value = req.body ?? {};
+    console.log('--- PATCH noticia estado ---');
+    console.log('id:', id);
+    console.log('body:', JSON.stringify(value));
+    const rawEstado = value.aprobada ?? value.aprobado ?? value.estado ?? value.status ?? value.value;
 
-    if (aprobada === undefined || aprobada === null) {
+    if (rawEstado === undefined || rawEstado === null || rawEstado === '') {
       return res.status(400).json({ success: false, error: 'Falta el valor de aprobada.' });
     }
+
+    const estadoTexto = String(rawEstado).trim().toLowerCase();
+    const aprobada =
+      rawEstado === true ||
+      rawEstado === 'true' ||
+      rawEstado === 'TRUE' ||
+      rawEstado === 1 ||
+      rawEstado === '1' ||
+      estadoTexto === 'aprobada' ||
+      estadoTexto === 'aprobado' ||
+      estadoTexto === 'approved' ||
+      estadoTexto === 'publicada' ||
+      estadoTexto === 'published';
 
     const resu = await noticiaService.actualizarEstadoNoticia(id, aprobada);
     return res.status(resu.success ? 200 : 400).json(resu);

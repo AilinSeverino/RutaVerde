@@ -1,6 +1,25 @@
 // src/services/noticiaService.js
 import { supabase } from '../config/supabase.js';
 
+function normalizarNoticia(n) {
+  const aprobada = n?.aprobada === true || n?.aprobada === 'true' || n?.aprobada === 1 || n?.aprobada === '1';
+
+  return {
+    id: n?.id_noticia ?? n?.id,
+    id_noticia: n?.id_noticia ?? n?.id,
+    titulo: n?.titulo ?? '',
+    subtitulo: n?.subtitulo ?? '',
+    contenido: n?.cuerpo ?? n?.contenido ?? '',
+    cuerpo: n?.cuerpo ?? n?.contenido ?? '',
+    foto: n?.url_foto ?? n?.foto ?? null,
+    url_foto: n?.url_foto ?? n?.foto ?? null,
+    fecha: n?.fecha_publicacion ?? n?.fecha ?? null,
+    fecha_publicacion: n?.fecha_publicacion ?? n?.fecha ?? null,
+    estado: aprobada ? 'publicada' : 'pendiente',
+    aprobada
+  };
+}
+
 export async function obtenerTodasLasNoticias() {
   try {
     const { data, error } = await supabase
@@ -10,34 +29,16 @@ export async function obtenerTodasLasNoticias() {
 
     if (error) return { success: false, error: error.message };
 
-    const noticiasFormateadas = (data || []).map((n) => {
-      let estadoTexto = 'pendiente';
-      if (n.aprobada === true) estadoTexto = 'publicada';
-      // En este flujo, false significa "pendiente de aprobación" y no "papelera".
-      if (n.aprobada === false) estadoTexto = 'pendiente';
-
-      return {
-        id: n.id_noticia,
-        id_noticia: n.id_noticia,
-        titulo: n.titulo,
-        subtitulo: n.subtitulo,
-        contenido: n.cuerpo,
-        cuerpo: n.cuerpo,
-        foto: n.url_foto,
-        url_foto: n.url_foto,
-        fecha: n.fecha_publicacion,
-        estado: estadoTexto,
-        aprobada: n.aprobada
-      };
-    });
-
-    return { success: true, data: noticiasFormateadas };
+    return {
+      success: true,
+      data: (data || []).map(normalizarNoticia)
+    };
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
 
-// --- NUEVO: Obtener Noticias APROBADAS (Vista pública) ---
+// --- Obtener Noticias APROBADAS (Vista pública) ---
 export async function obtenerNoticiasAprobadas() {
   try {
     const { data, error } = await supabase
@@ -47,13 +48,16 @@ export async function obtenerNoticiasAprobadas() {
       .order('fecha_publicacion', { ascending: false });
 
     if (error) return { success: false, error: error.message };
-    return { success: true, data };
+    return {
+      success: true,
+      data: (data || []).map(normalizarNoticia)
+    };
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
 
-// --- NUEVO: Obtener Noticias PENDIENTES (Backoffice) ---
+// --- Obtener Noticias PENDIENTES (Backoffice) ---
 export async function obtenerNoticiasPendientes() {
   try {
     const { data, error } = await supabase
@@ -62,29 +66,36 @@ export async function obtenerNoticiasPendientes() {
       .or('aprobada.is.null,aprobada.eq.false');
 
     if (error) return { success: false, error: error.message };
-    return { success: true, data };
+    return {
+      success: true,
+      data: (data || []).map(normalizarNoticia)
+    };
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
 
-// --- NUEVO: Aprobar o Rechazar Noticia (Backoffice) ---
+// --- Aprobar o Rechazar Noticia (Backoffice) ---
 export async function actualizarEstadoNoticia(idNoticia, aprobada) {
   try {
+    const valorAprobada = aprobada === true || aprobada === 'true' || aprobada === 1 || aprobada === '1';
+
     const { data, error } = await supabase
       .from('Noticias')
-      .update({ aprobada: aprobada })
+      .update({ aprobada: valorAprobada })
       .eq('id_noticia', idNoticia)
       .select();
 
     if (error) return { success: false, error: error.message };
-    return { success: true, data: data[0] };
+    if (!data || data.length === 0) return { success: false, error: 'No se encontró la noticia.' };
+
+    return { success: true, data: normalizarNoticia(data[0]) };
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
 
-// --- NUEVO: Editar Noticia (Backoffice) ---
+// --- Editar Noticia (Backoffice) ---
 export async function editarNoticia(idNoticia, campos) {
   try {
     const payload = { ...campos };
@@ -102,13 +113,13 @@ export async function editarNoticia(idNoticia, campos) {
     if (error) return { success: false, error: error.message };
     if (!data || data.length === 0) return { success: false, error: 'No se encontró la noticia.' };
 
-    return { success: true, data: data[0] };
+    return { success: true, data: normalizarNoticia(data[0]) };
   } catch (error) {
     return { success: false, error: error.message };
   }
 }
 
-// --- NUEVO: Eliminar Noticia (Backoffice) ---
+// --- Eliminar Noticia (Backoffice) ---
 export async function eliminarNoticia(idNoticia) {
   try {
     const { data, error } = await supabase
@@ -118,7 +129,7 @@ export async function eliminarNoticia(idNoticia) {
       .select();
 
     if (error) return { success: false, error: error.message };
-    return { success: true, data: data[0] || null };
+    return { success: true, data: data && data[0] ? normalizarNoticia(data[0]) : null };
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -174,7 +185,7 @@ export async function crearNoticia(titulo, contenido, archivoFoto) {
       return { success: false, error: `Error en BD: ${error.message}` };
     }
 
-    return { success: true, data: data[0] };
+    return { success: true, data: normalizarNoticia(data[0]) };
   } catch (error) {
     return { success: false, error: error.message };
   }

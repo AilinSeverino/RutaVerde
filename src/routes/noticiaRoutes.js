@@ -20,6 +20,8 @@ router.get('/aprobadas', listarNoticiasAprobadas);
 router.post('/', upload.single('foto'), publicarNoticia);
 router.post('/mejorar-ia', mejorarNoticia);
 router.patch('/:id/estado', cambiarEstadoNoticia);
+router.put('/:id/estado', cambiarEstadoNoticia);
+router.post('/:id/estado', cambiarEstadoNoticia);
 router.put('/:id', editarNoticia);
 router.delete('/:id', eliminarNoticia);
 
