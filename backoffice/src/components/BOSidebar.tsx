@@ -4,6 +4,7 @@ import './BOSidebar.css'
 interface Props {
   seccionActiva: string
   onNavegar: (seccion: string) => void
+  onCerrarSesion: () => void | Promise<void>
 }
 
 const navItems = [
@@ -14,7 +15,7 @@ const navItems = [
   { key: 'configuracion', label: 'Configuración', icon: '⚙️' },
 ]
 
-const BOSidebar: React.FC<Props> = ({ seccionActiva, onNavegar }) => {
+const BOSidebar: React.FC<Props> = ({ seccionActiva, onNavegar, onCerrarSesion }) => {
   return (
     <aside className="bo-sidebar">
       <div className="bo-sidebar__logo">
@@ -36,7 +37,10 @@ const BOSidebar: React.FC<Props> = ({ seccionActiva, onNavegar }) => {
       </nav>
 
       <div className="bo-sidebar__footer">
-        v1.0 · RutaVerde
+        <span>v1.0 · RutaVerde</span>
+        <button type="button" className="bo-sidebar__logout" onClick={() => void onCerrarSesion()}>
+          Cerrar sesión
+        </button>
       </div>
     </aside>
   )

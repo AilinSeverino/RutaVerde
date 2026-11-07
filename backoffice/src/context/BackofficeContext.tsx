@@ -2,7 +2,7 @@ import { createContext, useContext, useState, useEffect, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import type { NoticiaBO, AporteBO, UsuarioBO } from '../types'
 
-const API_URL = 'http://localhost:5000/api' // Reemplaza por la URL de tu API
+const API_URL = '/api'
 
 interface ActividadItem {
   id: number
@@ -17,6 +17,8 @@ interface BackofficeContextValue {
   usuarios: UsuarioBO[]
   actividadReciente: ActividadItem[]
   loading: boolean
+  authenticated: boolean
+  cerrarSesion: () => Promise<void>
   // Noticia actions
   aprobarNoticia: (id: number) => Promise<void>
   rechazarNoticia: (id: number) => Promise<void>
@@ -42,6 +44,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
   const [usuarios, setUsuarios] = useState<UsuarioBO[]>([])
   const [actividadReciente, setActividadReciente] = useState<ActividadItem[]>([])
   const [loading, setLoading] = useState<boolean>(true)
+  const [authenticated, setAuthenticated] = useState<boolean>(false)
 
   const addActividad = (texto: string, tipo: ActividadItem['tipo']) => {
     setActividadReciente(prev => [
@@ -50,37 +53,54 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
     ])
   }
 
-  // Cargar datos iniciales desde el backend
-  const cargarDatos = async () => {
-    setLoading(true)
-    try {
-      const [resNoticias, resAportes, resUsuarios] = await Promise.all([
-        fetch(`${API_URL}/noticias`),
-        fetch(`${API_URL}/baldosas/todas`),
-        fetch(`${API_URL}/usuarios`)
-      ])
-
-      if (resNoticias.ok) {
-        const dataNoticias = await resNoticias.json()
-        setNoticias(dataNoticias.data || dataNoticias)
-      }
-      if (resAportes.ok) {
-        const dataAportes = await resAportes.json()
-        setAportes(dataAportes.data || dataAportes)
-      }
-      if (resUsuarios.ok) {
-        const dataUsuarios = await resUsuarios.json()
-        setUsuarios(dataUsuarios.data || dataUsuarios)
-      }
-    } catch (error) {
-      console.error('Error al cargar datos del backoffice:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
+    let cancelled = false
+
+    const cargarDatos = async () => {
+      setLoading(true)
+      try {
+        const respuestaSesion = await fetch(`${API_URL}/backoffice/session`, { credentials: 'include' })
+        if (!respuestaSesion.ok) {
+          setAuthenticated(false)
+          return
+        }
+
+        setAuthenticated(true)
+        const [resNoticias, resAportes, resUsuarios] = await Promise.all([
+          fetch(`${API_URL}/noticias/todas`, { credentials: 'include' }),
+          fetch(`${API_URL}/baldosas/todas`, { credentials: 'include' }),
+          fetch(`${API_URL}/usuarios`, { credentials: 'include' })
+        ])
+
+        if (cancelled) return
+        if ([resNoticias, resAportes, resUsuarios].some((response) => response.status === 401)) {
+          setAuthenticated(false)
+          return
+        }
+
+        if (resNoticias.ok) {
+          const dataNoticias = await resNoticias.json()
+          setNoticias(dataNoticias.data || dataNoticias)
+        }
+        if (resAportes.ok) {
+          const dataAportes = await resAportes.json()
+          setAportes(dataAportes.data || dataAportes)
+        }
+        if (resUsuarios.ok) {
+          const dataUsuarios = await resUsuarios.json()
+          setUsuarios(dataUsuarios.data || dataUsuarios)
+        }
+      } catch (error) {
+        console.error('Error al cargar datos del backoffice:', error)
+      } finally {
+        if (!cancelled) setLoading(false)
+      }
+    }
+
     cargarDatos()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   const value = useMemo<BackofficeContextValue>(() => ({
@@ -89,12 +109,26 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
     usuarios,
     actividadReciente,
     loading,
+    authenticated,
+
+    cerrarSesion: async () => {
+      try {
+        await fetch(`${API_URL}/backoffice/logout`, { method: 'POST', credentials: 'include' })
+      } catch (err) {
+        console.error(err)
+      }
+      setAuthenticated(false)
+      setNoticias([])
+      setAportes([])
+      setUsuarios([])
+    },
 
     // --- ACCIONES DE NOTICIAS ---
     aprobarNoticia: async (id) => {
       try {
         const res = await fetch(`${API_URL}/noticias/${id}/estado`, {
           method: 'PATCH',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ aprobada: true })
         })
@@ -111,6 +145,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
       try {
         const res = await fetch(`${API_URL}/noticias/${id}/estado`, {
           method: 'PATCH',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ aprobada: false })
         })
@@ -134,7 +169,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
 
     eliminarNoticia: async (id) => {
       try {
-        const res = await fetch(`${API_URL}/noticias/${id}`, { method: 'DELETE' })
+        const res = await fetch(`${API_URL}/noticias/${id}`, { method: 'DELETE', credentials: 'include' })
         if (res.ok) {
           setNoticias(prev => prev.filter(n => n.id !== id))
           addActividad(`Noticia #${id} eliminada permanentemente`, 'noticia')
@@ -148,6 +183,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
       try {
         const res = await fetch(`${API_URL}/noticias/${id}`, {
           method: 'PUT',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(campos)
         })
@@ -165,6 +201,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
       try {
         const res = await fetch(`${API_URL}/baldosas/${id}/estado`, {
           method: 'PATCH',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ aprobada: true })
         })
@@ -181,6 +218,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
       try {
         const res = await fetch(`${API_URL}/baldosas/${id}/estado`, {
           method: 'PATCH',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ aprobada: false })
         })
@@ -195,7 +233,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
 
     eliminarAporte: async (id) => {
       try {
-        const res = await fetch(`${API_URL}/baldosas/${id}`, { method: 'DELETE' })
+        const res = await fetch(`${API_URL}/baldosas/${id}`, { method: 'DELETE', credentials: 'include' })
         if (res.ok) {
           setAportes(prev => prev.filter(a => a.id !== id))
           addActividad(`Aporte #${id} eliminado`, 'aporte')
@@ -212,6 +250,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
       try {
         const res = await fetch(`${API_URL}/usuarios/${id}`, {
           method: 'PATCH',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ activo: !usuario.activo })
         })
@@ -228,6 +267,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
       try {
         const res = await fetch(`${API_URL}/usuarios/${id}/rol`, {
           method: 'PATCH',
+          credentials: 'include',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ id_rol: nuevoRol })
         })
@@ -242,7 +282,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
 
     eliminarUsuario: async (id) => {
       try {
-        const res = await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE' })
+        const res = await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE', credentials: 'include' })
         if (res.ok) {
           setUsuarios(prev => prev.filter(u => u.id !== id))
           addActividad(`Usuario #${id} eliminado`, 'usuario')
@@ -251,7 +291,7 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
         console.error(err)
       }
     },
-  }), [noticias, aportes, usuarios, actividadReciente, loading])
+  }), [noticias, aportes, usuarios, actividadReciente, loading, authenticated])
 
   return (
     <BackofficeContext.Provider value={value}>
