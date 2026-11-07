@@ -1,5 +1,6 @@
 import { supabase } from '../config/supabase.js';
 import bcrypt from 'bcrypt';
+import { randomInt } from 'node:crypto';
 
 export async function registro(nombre, email, contrasenia, region) {
   try {
@@ -123,6 +124,12 @@ export async function solicitarLogin(email, contrasenia) {
             return { success: false, error: 'Correo o contraseña incorrectos.' };
         }
 
+        const { contrasena, codigo_2fa, expiracion_2fa, ...usuarioSeguro } = usuario;
+
+        if (Number(usuario.id_rol) !== 1) {
+            return { success: true, requiereCodigo: false, usuario: usuarioSeguro };
+        }
+
         const codigo = Math.floor(100000 + Math.random() * 900000).toString();
         const expiracion = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
@@ -136,7 +143,6 @@ export async function solicitarLogin(email, contrasenia) {
             return { success: false, error: 'Error al generar el código de verificación.' };
         }
 
-        const { contrasena, ...usuarioSeguro } = usuario;
         return { success: true, requiereCodigo: true, usuario: usuarioSeguro, codigo };
 
     } catch (error) {
@@ -170,9 +176,83 @@ export async function verificarCodigoLogin(email, codigoIngresado) {
             .update({ codigo_2fa: null, expiracion_2fa: null })
             .eq('id_usuario', usuario.id_usuario);
 
-        const { contrasena, ...usuarioSeguro } = usuario;
+        const { contrasena, codigo_2fa, expiracion_2fa, ...usuarioSeguro } = usuario;
         return { success: true, usuario: usuarioSeguro };
 
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function solicitarRecuperacionContrasenia(email) {
+    try {
+        const emailNormalizado = (email || '').trim().toLowerCase();
+        if (!emailNormalizado) {
+            return { success: false, error: 'Ingresá tu correo electrónico.' };
+        }
+
+        const { data: usuario, error } = await supabase
+            .from('Usuarios')
+            .select('id_usuario, nombreC, email')
+            .eq('email', emailNormalizado)
+            .maybeSingle();
+
+        if (error) return { success: false, error: error.message };
+        if (!usuario) return { success: true, usuario: null };
+
+        const codigo = randomInt(100000, 1000000).toString();
+        const expiracion = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        const { error: updateError } = await supabase
+            .from('Usuarios')
+            .update({ codigo_recuperacion: codigo, expiracion_recuperacion: expiracion })
+            .eq('id_usuario', usuario.id_usuario);
+
+        if (updateError) return { success: false, error: updateError.message };
+
+        return { success: true, usuario, codigo };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function restablecerContrasenia(email, codigoIngresado, nuevaContrasenia) {
+    try {
+        if (!nuevaContrasenia || nuevaContrasenia.length < 8 || !/^(?=.*[A-Za-z])(?=.*\d)/.test(nuevaContrasenia)) {
+            return { success: false, error: 'La contraseña debe tener 8 caracteres, una letra y un número.' };
+        }
+
+        const emailNormalizado = (email || '').trim().toLowerCase();
+        const { data: usuario, error } = await supabase
+            .from('Usuarios')
+            .select('id_usuario, codigo_recuperacion, expiracion_recuperacion')
+            .eq('email', emailNormalizado)
+            .maybeSingle();
+
+        if (error) return { success: false, error: error.message };
+        if (!usuario || !usuario.codigo_recuperacion || !usuario.expiracion_recuperacion) {
+            return { success: false, error: 'El código es inválido o venció. Solicitá uno nuevo.' };
+        }
+
+        if (new Date(usuario.expiracion_recuperacion).getTime() <= Date.now()) {
+            return { success: false, error: 'El código venció. Solicitá uno nuevo.' };
+        }
+
+        if (usuario.codigo_recuperacion !== String(codigoIngresado || '').trim()) {
+            return { success: false, error: 'El código ingresado es incorrecto.' };
+        }
+
+        const hash = await bcrypt.hash(nuevaContrasenia, 10);
+        const { error: updateError } = await supabase
+            .from('Usuarios')
+            .update({
+                contrasena: hash,
+                codigo_recuperacion: null,
+                expiracion_recuperacion: null
+            })
+            .eq('id_usuario', usuario.id_usuario);
+
+        if (updateError) return { success: false, error: updateError.message };
+        return { success: true };
     } catch (error) {
         return { success: false, error: error.message };
     }

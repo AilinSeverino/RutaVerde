@@ -1,5 +1,43 @@
 import * as authService from '../services/authService.js';
-import { enviarCodigoVerificacion } from '../services/emailService.js';
+import { enviarCodigoVerificacion, enviarCodigoRecuperacion } from '../services/emailService.js';
+import {
+  crearSesionAdmin,
+  crearSesionUsuario,
+  extraerTokenAdmin,
+  extraerTokenUsuario,
+  revocarSesionUsuario,
+  revocarSesionAdmin
+} from '../middlewares/adminAuthMiddleware.js';
+
+const opcionesCookieAdmin = {
+  httpOnly: true,
+  sameSite: 'lax',
+  secure: process.env.NODE_ENV === 'production',
+  path: '/',
+  maxAge: 8 * 60 * 60 * 1000
+};
+
+export async function verificarSesionBackoffice(req, res) {
+  return res.status(200).json({ success: true, usuario: req.usuario });
+}
+
+export async function verificarSesionUsuario(req, res) {
+  return res.status(200).json({ success: true, usuario: req.usuario });
+}
+
+export async function cerrarSesionUsuario(req, res) {
+  revocarSesionUsuario(extraerTokenUsuario(req));
+  res.clearCookie('rv_user_session', opcionesCookieAdmin);
+  res.clearCookie('rv_admin_session', opcionesCookieAdmin);
+  return res.status(200).json({ success: true });
+}
+
+export async function cerrarSesionBackoffice(req, res) {
+  revocarSesionAdmin(extraerTokenAdmin(req));
+  res.clearCookie('rv_admin_session', opcionesCookieAdmin);
+  res.clearCookie('rv_user_session', opcionesCookieAdmin);
+  return res.status(200).json({ success: true });
+}
 
 export async function registrarUsuario(req, res) {
   try {
@@ -18,7 +56,6 @@ export async function registrarUsuario(req, res) {
 
 export async function loginUsuario(req, res) {
   try {
-    console.log('--- 1. Datos recibidos del frontend ---', req.body);
     const { email, contrasenia, password } = req.body;
     const clave = contrasenia || password;
 
@@ -27,15 +64,26 @@ export async function loginUsuario(req, res) {
     }
 
     const resultado = await authService.solicitarLogin(email, clave);
-    console.log('--- 2. Resultado de solicitarLogin ---', resultado);
 
     if (!resultado.success) {
       return res.status(401).json({ success: false, error: resultado.error });
     }
 
-    console.log('--- 3. Intentando enviar correo a:', email);
+    if (!resultado.requiereCodigo) {
+      const sessionToken = crearSesionUsuario(resultado.usuario);
+      res.cookie('rv_user_session', sessionToken, opcionesCookieAdmin);
+      return res.status(200).json({
+        success: true,
+        requiereCodigo: false,
+        usuario: resultado.usuario
+      });
+    }
+
     const mailResult = await enviarCodigoVerificacion(email, resultado.usuario.nombreC, resultado.codigo);
-    console.log('--- 4. Resultado del envío de correo ---', mailResult);
+
+    if (!mailResult.success) {
+      return res.status(502).json({ success: false, error: mailResult.error || 'No se pudo enviar el código de verificación.' });
+    }
 
     return res.status(200).json({
       success: true,
@@ -44,6 +92,50 @@ export async function loginUsuario(req, res) {
     });
   } catch (error) {
     console.error('--- ERROR INESPERADO EN LOGIN ---', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+export async function solicitarRecuperacionContrasenia(req, res) {
+  try {
+    const resultado = await authService.solicitarRecuperacionContrasenia(req.body.email);
+
+    if (!resultado.success) {
+      return res.status(500).json({ success: false, error: resultado.error });
+    }
+
+    if (resultado.usuario) {
+      const envio = await enviarCodigoRecuperacion(
+        resultado.usuario.email,
+        resultado.usuario.nombreC,
+        resultado.codigo
+      );
+
+      if (!envio.success && process.env.NODE_ENV !== 'production') {
+        return res.status(502).json({ success: false, error: envio.error });
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Si el correo está registrado, recibirás un código de recuperación.'
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, error: error.message });
+  }
+}
+
+export async function restablecerContrasenia(req, res) {
+  try {
+    const { email, codigo, nuevaContrasenia } = req.body;
+    const resultado = await authService.restablecerContrasenia(email, codigo, nuevaContrasenia);
+
+    if (!resultado.success) {
+      return res.status(400).json({ success: false, error: resultado.error });
+    }
+
+    return res.status(200).json({ success: true, message: 'La contraseña se actualizó correctamente.' });
+  } catch (error) {
     return res.status(500).json({ success: false, error: error.message });
   }
 }
@@ -62,9 +154,16 @@ export async function confirmarCodigoUsuario(req, res) {
       return res.status(400).json({ success: false, error: resultado.error });
     }
 
+    if (Number(resultado.usuario.id_rol) === 1) {
+      const sessionToken = crearSesionAdmin(resultado.usuario);
+      res.cookie('rv_admin_session', sessionToken, opcionesCookieAdmin);
+      res.cookie('rv_user_session', sessionToken, opcionesCookieAdmin);
+    }
+
     return res.status(200).json({
       success: true,
       data: resultado.usuario,
+      backoffice: Number(resultado.usuario.id_rol) === 1,
       message: 'Inicio de sesión verificado con éxito.'
     });
   } catch (error) {
@@ -74,7 +173,7 @@ export async function confirmarCodigoUsuario(req, res) {
 
 export const cambiarNombre = async (req, res) => {
   try {
-    const idUsuario = req.usuario?.id_usuario || req.usuario?.id || req.body.id_usuario;
+    const idUsuario = req.usuario?.id_usuario;
     const { nombre } = req.body;
 
     if (!idUsuario) {
@@ -102,7 +201,7 @@ export const cambiarNombre = async (req, res) => {
 
 export const cambiarFotoPerfil = async (req, res) => {
   try {
-    const idUsuario = req.usuario?.id_usuario || req.usuario?.id || req.body.id_usuario;
+    const idUsuario = req.usuario?.id_usuario;
 
     if (!idUsuario) {
       return res.status(400).json({ error: 'Falta el ID del usuario.' });

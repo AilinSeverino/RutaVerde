@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase.js';
+import { supabase, getSupabaseAdmin } from '../config/supabase.js';
 
 export async function listarUsuarios(req, res) {
     try {
@@ -48,7 +48,7 @@ export async function actualizarUsuario(req, res) {
         const { id } = req.params;
         const campos = req.body || {};
 
-        const { data, error } = await supabase
+        const { data, error } = await getSupabaseAdmin()
             .from('Usuarios')
             .update(campos)
             .eq('id_usuario', id)
@@ -77,7 +77,7 @@ export async function cambiarRolUsuario(req, res) {
             return res.status(400).json({ success: false, error: 'Falta id_rol.' });
         }
 
-        const { data, error } = await supabase
+        const { data, error } = await getSupabaseAdmin()
             .from('Usuarios')
             .update({ id_rol })
             .eq('id_usuario', id)
@@ -97,7 +97,7 @@ export async function eliminarUsuario(req, res) {
     try {
         const { id } = req.params;
 
-        const { data, error } = await supabase
+        const { data, error } = await getSupabaseAdmin()
             .from('Usuarios')
             .delete()
             .eq('id_usuario', id)

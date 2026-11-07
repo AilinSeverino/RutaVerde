@@ -1,76 +1,48 @@
 import { supabase } from '../config/supabase.js';
 
 export const getRegionesConPlantas = async () => {
-  try {
-    const { data: regiones, error } = await supabase
-      .from('Regiones')
-      .select(`
-        id_region,
-        nombre,
-        paises,
-        descripcion,
-        bioma
-      `)
-      .order('nombre', { ascending: true })
-      .range(0, 9999);
+  const { data: regiones, error } = await supabase
+    .from('Regiones')
+    .select(`
+      id_region,
+      nombre,
+      paises,
+      descripcion,
+      bioma,
+      Baldosa ( id_baldosa, aprobada ),
+      Region_Planta (
+        Plantas_Nativas ( id_planta, nombre, descripcion, url_imagen )
+      )
+    `)
+    .order('nombre', { ascending: true })
+    .range(0, 9999);
 
-    if (error) throw new Error(error.message);
-
-    if (!Array.isArray(regiones)) return [];
-
-    const resultado = [];
-
-    for (const region of regiones) {
-      let conteoBaldosas = 0;
-
-      const { count, error: countError } = await supabase
-        .from('Baldosa')
-        .select('id_baldosa', { count: 'exact', head: true })
-        .eq('id_region', region.id_region);
-
-      if (!countError && typeof count === 'number') {
-        conteoBaldosas = count;
-      }
-
-      let plantas = [];
-
-      const { data: relaciones, error: plantasError } = await supabase
-        .from('Region_Planta')
-        .select('id_planta')
-        .eq('id_region', region.id_region);
-
-      if (!plantasError && Array.isArray(relaciones) && relaciones.length > 0) {
-        const ids = relaciones.map((r) => r.id_planta).filter(Boolean);
-
-        if (ids.length > 0) {
-          const { data: plantasData } = await supabase
-            .from('Plantas_Nativas')
-            .select('id_planta, nombre, descripcion, url_imagen')
-            .in('id_planta', ids);
-
-          plantas = plantasData || [];
-        }
-      }
-
-      resultado.push({
-        id_region: region.id_region,
-        id: region.id_region,
-        nombre: region.nombre,
-        paises: region.paises,
-        descripcion: region.descripcion,
-        resumen: region.descripcion,
-        bioma: region.bioma,
-        contribuciones: conteoBaldosas,
-        arboles: conteoBaldosas,
-        plantas
-      });
-    }
-
-    return resultado;
-  } catch (error) {
+  if (error) {
     console.error('Error en getRegionesConPlantas:', error.message);
-    throw error;
+    throw new Error(error.message);
   }
+
+  return (regiones || []).map((region) => {
+    const contribuciones = Array.isArray(region.Baldosa)
+      ? region.Baldosa.filter((baldosa) => baldosa.aprobada === true).length
+      : 0;
+    const plantas = Array.isArray(region.Region_Planta)
+      ? region.Region_Planta.map((relacion) => relacion.Plantas_Nativas).filter(Boolean)
+      : [];
+
+    return {
+      id_region: region.id_region,
+      id: region.id_region,
+      nombre: region.nombre,
+      paises: region.paises,
+      descripcion: region.descripcion,
+      resumen: region.descripcion,
+      bioma: region.bioma,
+      contribuciones,
+      arboles: contribuciones,
+      plantas
+    };
+  });
 };
 
 export const getRegionesPorPlanta = async (nombrePlanta) => {

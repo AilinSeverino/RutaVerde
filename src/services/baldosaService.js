@@ -1,4 +1,4 @@
-import { supabase } from '../config/supabase.js';
+import { supabase, getSupabaseAdmin } from '../config/supabase.js';
 
 export async function obtenerTodasLasBaldosas() {
   try {
@@ -98,7 +98,7 @@ export async function obtenerBaldosasPendientes() {
 
 export async function actualizarEstadoBaldosa(idBaldosa, aprobada) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseAdmin()
       .from('Baldosa')
       .update({ aprobada: aprobada })
       .eq('id_baldosa', idBaldosa)
@@ -197,7 +197,7 @@ export async function subirBaldosa(plantaEntrada, idRegion, tamanio, comentarios
 
 export async function eliminarBaldosa(idBaldosa) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseAdmin()
       .from('Baldosa')
       .delete()
       .eq('id_baldosa', idBaldosa)

@@ -1,5 +1,5 @@
 // src/services/noticiaService.js
-import { supabase } from '../config/supabase.js';
+import { supabase, getSupabaseAdmin } from '../config/supabase.js';
 
 function normalizarNoticia(n) {
   const aprobada = n?.aprobada === true || n?.aprobada === 'true' || n?.aprobada === 1 || n?.aprobada === '1';
@@ -80,7 +80,7 @@ export async function actualizarEstadoNoticia(idNoticia, aprobada) {
   try {
     const valorAprobada = aprobada === true || aprobada === 'true' || aprobada === 1 || aprobada === '1';
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseAdmin()
       .from('Noticias')
       .update({ aprobada: valorAprobada })
       .eq('id_noticia', idNoticia)
@@ -104,7 +104,7 @@ export async function editarNoticia(idNoticia, campos) {
     if (payload.cuerpo !== undefined) payload.cuerpo = String(payload.cuerpo).trim();
     if (payload.contenido !== undefined) payload.cuerpo = String(payload.contenido).trim();
 
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseAdmin()
       .from('Noticias')
       .update(payload)
       .eq('id_noticia', idNoticia)
@@ -122,7 +122,7 @@ export async function editarNoticia(idNoticia, campos) {
 // --- Eliminar Noticia (Backoffice) ---
 export async function eliminarNoticia(idNoticia) {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseAdmin()
       .from('Noticias')
       .delete()
       .eq('id_noticia', idNoticia)
