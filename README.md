@@ -1,6 +1,6 @@
 # Ruta Verde
 
-Monorepo con tres apps independientes:
+Los dos repos en uno con tres apps independientes:
 
 | Carpeta | Qué es | Puerto |
 |---|---|---|
@@ -15,11 +15,13 @@ Requisitos: Node.js (LTS) y Git.
 ```bash
 git clone https://github.com/AilinSeverino/RutaVerde.git
 cd RutaVerde
-npm run install:all            # instala las dependencias de las 4 carpetas
-cp backend/.env.example backend/.env   # y completar los valores
-npm run dev                    # levanta backend, web y backoffice juntos
-```
+Dependencias de la raíz: npm install concurrently --save-dev
+Dependencias del backend: npm --prefix backend install express nodemailer
+Dependencias del Frontend: npm --prefix frontend install
+Dependencias del backoffice: npm --prefix backoffice install
+Iniciar el proyecto: npm run dev
+adentro de la carpeta backend creas un archivo y lo llamas .env, ahi vas a pegar todos los valores que estan en el documento. 
+Iniciar el proyecto: npm run dev
 
-El `.env` del backend no se sube a git: hay que pasarlo por un medio seguro.
 
 Más detalles de cada app en `frontend/README.md` y `frontend/CLAUDE.md`.
