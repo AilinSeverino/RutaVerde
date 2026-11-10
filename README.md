@@ -15,11 +15,17 @@ Requisitos: tenes instalado Node.js (LTS) y Git.
 ```bash
 git clone https://github.com/AilinSeverino/RutaVerde.git
 cd RutaVerde
-Dependencias de la raíz: npm install concurrently --save-dev
-Dependencias del backend: npm --prefix backend install express nodemailer
-Dependencias del Frontend: npm --prefix frontend install
-Dependencias del backoffice: npm --prefix backoffice install
-Iniciar el proyecto: npm run dev
-adentro de la carpeta backend creas un archivo y lo llamas .env, ahi vas a pegar todos los valores que estan en el documento. 
-Iniciar el proyecto: npm run dev
+# 1. Instalar dependencias de la raíz
+ npm install concurrently --save-dev
 
+# 2. Instalar dependencias del Backend
+npm --prefix backend install express nodemailer
+
+# 3. Instalar dependencias del Frontend 
+ npm --prefix frontend install
+
+# 4. Instalar dependencias del Backoffice 
+npm --prefix backoffice install
+
+#5. Iniciar el proyecto
+npm run dev
