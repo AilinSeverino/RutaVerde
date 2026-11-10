@@ -20,6 +20,20 @@ interface Aviso {
   mensaje: string;
 }
 
+const TAMANO_MIN = 1;
+const TAMANO_MAX = 10000; // cm (100 m)
+
+// Devuelve un mensaje de error, o '' si el tamaño es válido
+const validarTamano = (valor: string): string => {
+  const limpio = valor.trim();
+  if (!limpio) return 'Ingresá el tamaño de la baldosa.';
+  if (!/^\d+$/.test(limpio)) return 'Usá solo números enteros, sin comas ni letras.';
+  const numero = Number(limpio);
+  if (numero < TAMANO_MIN) return `El tamaño mínimo es ${TAMANO_MIN} cm.`;
+  if (numero > TAMANO_MAX) return `El tamaño máximo es ${TAMANO_MAX} cm.`;
+  return '';
+};
+
 const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const navigate = useNavigate();
@@ -29,9 +43,13 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
   const [planta, setPlanta] = useState('');
   const [region, setRegion] = useState('');
   const [regionesFiltradas, setRegionesFiltradas] = useState<Region[]>([]);
-  const [cargandoRegiones, setCargandoRegiones] = useState(false);
+  const [plantaBuscada, setPlantaBuscada] = useState('');
+  // "Buscando" mientras el texto escrito todavía no tiene resultado
+  const cargandoRegiones = planta.trim() !== '' && planta.trim() !== plantaBuscada;
 
   const [tamano, setTamano] = useState('');
+  const [tamanoTocado, setTamanoTocado] = useState(false);
+  const errorTamano = validarTamano(tamano);
   const [comentarios, setComentarios] = useState('');
   const [imagenArchivo, setImagenArchivo] = useState<File | null>(null);
   const [nombreImagen, setNombreImagen] = useState('Ningún archivo seleccionado');
@@ -44,48 +62,48 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
     return () => window.clearTimeout(timer);
   }, [aviso]);
 
-  // Buscar ecorregiones asociadas a la planta
-  const buscarRegionesPorPlanta = async (nombrePlanta: string) => {
-    if (!nombrePlanta.trim()) {
-      setRegionesFiltradas([]);
-      setRegion('');
-      return;
-    }
+  // Buscar ecorregiones asociadas a la planta mientras se escribe (con pausa de 400 ms)
+  useEffect(() => {
+    const termino = planta.trim();
 
-    setCargandoRegiones(true);
-    try {
-      const respuesta = await api.get(`/api/regiones/por-planta?planta=${encodeURIComponent(nombrePlanta.trim())}`);
-      const datos = respuesta.data?.data || respuesta.data || [];
+    if (!termino) return;
 
-      if (Array.isArray(datos)) {
-        setRegionesFiltradas(datos);
-        
+    let cancelado = false;
+
+    const timer = window.setTimeout(async () => {
+      try {
+        const respuesta = await api.get(`/api/regiones/por-planta?planta=${encodeURIComponent(termino)}`);
+        if (cancelado) return;
+        const datos = respuesta.data?.data || respuesta.data || [];
+        const lista: Region[] = Array.isArray(datos) ? datos : [];
+
+        setRegionesFiltradas(lista);
         // Si solo pertenece a 1 región, la selecciona automáticamente
-        if (datos.length === 1) {
-          setRegion(String(datos[0].id_region));
-        } else {
-          setRegion('');
-        }
-      } else {
+        setRegion(lista.length === 1 ? String(lista[0].id_region) : '');
+      } catch (error: any) {
+        if (cancelado) return;
+        console.error('Error al pedir las regiones por planta:', error.response?.data || error.message);
         setRegionesFiltradas([]);
         setRegion('');
+      } finally {
+        if (!cancelado) setPlantaBuscada(termino);
       }
-    } catch (error: any) {
-      console.error('Error al pedir las regiones por planta:', error.response?.data || error.message);
-      setRegionesFiltradas([]);
-      setRegion('');
-    } finally {
-      setCargandoRegiones(false);
-    }
-  };
+    }, 400);
+
+    return () => {
+      cancelado = true;
+      window.clearTimeout(timer);
+    };
+  }, [planta]);
 
   const handlePlantaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const valor = e.target.value;
     setPlanta(valor);
-  };
-
-  const handlePlantaBlur = () => {
-    buscarRegionesPorPlanta(planta);
+    if (!valor.trim()) {
+      setRegionesFiltradas([]);
+      setRegion('');
+      setPlantaBuscada('');
+    }
   };
 
   const handleUploadClick = () => {
@@ -104,6 +122,16 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
     e.preventDefault();
 
     if (subiendo || !isLoggedIn) return;
+
+    setTamanoTocado(true);
+    if (validarTamano(tamano)) {
+      setAviso({
+        tipo: 'error',
+        titulo: 'Tamaño inválido',
+        mensaje: validarTamano(tamano)
+      });
+      return;
+    }
 
     if (!planta || !region || !tamano || !imagenArchivo) {
       setAviso({
@@ -139,6 +167,7 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
         setRegion('');
         setRegionesFiltradas([]);
         setTamano('');
+        setTamanoTocado(false);
         setComentarios('');
         setImagenArchivo(null);
         setNombreImagen('Ningún archivo seleccionado');
@@ -226,7 +255,6 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
               id="planta"
               value={planta}
               onChange={handlePlantaChange}
-              onBlur={handlePlantaBlur}
               placeholder="Ingresá el nombre de la planta (ej: Ceibo)"
               required
             />
@@ -239,16 +267,16 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
               id="region" 
               value={region} 
               onChange={(e) => setRegion(e.target.value)} 
-              disabled={!planta || cargandoRegiones || regionesFiltradas.length === 0}
+              disabled={!planta.trim() || cargandoRegiones || regionesFiltradas.length === 0}
               required
             >
               <option value="" disabled>
-                {cargandoRegiones
-                  ? 'Buscando ecorregiones...'
-                  : !planta
+                {!planta.trim()
                   ? 'Escribí una planta para ver sus ecorregiones'
+                  : cargandoRegiones
+                  ? 'Buscando ecorregiones...'
                   : regionesFiltradas.length === 0
-                  ? 'Planta no encontrada en ninguna ecorregión'
+                  ? 'No encontramos esa planta. Revisá cómo está escrita'
                   : 'Seleccioná la ecorregión'}
               </option>
               {regionesFiltradas.map((reg) => (
@@ -261,13 +289,27 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
 
           {/* 3. Tamaño */}
           <div className="form-group">
-            <label htmlFor="tamano">Tamaño</label>
-            <select id="tamano" value={tamano} onChange={(e) => setTamano(e.target.value)} required>
-              <option value="" disabled>Seleccioná el tamaño de la baldosa en metros</option>
-              <option value="1">1 metro</option>
-              <option value="2">2 metros</option>
-              <option value="5">5 metros</option>
-            </select>
+            <label htmlFor="tamano">Tamaño (cm)</label>
+            <input
+              id="tamano"
+              type="text"
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder={`Ingresá el tamaño de la baldosa en centímetros (${TAMANO_MIN} a ${TAMANO_MAX})`}
+              value={tamano}
+              maxLength={String(TAMANO_MAX).length}
+              onChange={(e) => {
+                setTamano(e.target.value.replace(/\D/g, ''));
+                setTamanoTocado(true);
+              }}
+              onBlur={() => setTamanoTocado(true)}
+              aria-invalid={tamanoTocado && !!errorTamano}
+              aria-describedby="tamano-error"
+              required
+            />
+            {tamanoTocado && errorTamano && (
+              <span id="tamano-error" className="campo-error" role="alert">{errorTamano}</span>
+            )}
           </div>
 
           {/* 4. Comentarios e Imagen */}

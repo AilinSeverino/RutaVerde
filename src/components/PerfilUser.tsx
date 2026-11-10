@@ -89,19 +89,22 @@ const EditModal: React.FC<EditModalProps> = ({ onClose }) => {
       }
 
       // 3. Armamos el objeto con los datos actualizados
+      // Solo se actualiza `data` si el usuario ya venía envuelto en ese objeto;
+      // si no, crearlo con 2 campos taparía el resto (email, ubicación, etc.)
       const usuarioActualizado = {
         ...usuario,
         nombreC: nuevoNombreC,
         fotoPerfil: nuevaFoto,
-        data: {
-          ...(usuario?.data || {}),
-          nombreC: nuevoNombreC,
-          fotoPerfil: nuevaFoto
-        }
+        ...(usuario?.data && {
+          data: {
+            ...usuario.data,
+            nombreC: nuevoNombreC,
+            fotoPerfil: nuevaFoto
+          }
+        })
       };
 
-      // 4. Guardamos en localStorage y actualizamos el estado global
-      localStorage.setItem('usuario', JSON.stringify(usuarioActualizado));
+      // 4. updateUsuario actualiza el estado global y lo guarda en localStorage
       updateUsuario(usuarioActualizado);
 
       onClose();
