@@ -1,0 +1,13 @@
+{
+  "name": "ruta-verde",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "install:all": "npm install && npm --prefix backend install && npm --prefix frontend install && npm --prefix backoffice install",
+    "dev": "concurrently -n backend,web,backoffice -c yellow,green,blue \"npm --prefix backend run dev\" \"npm --prefix frontend run dev\" \"npm --prefix backoffice run dev\"",
+    "build": "npm --prefix frontend run build && npm --prefix backoffice run build"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.7"
+  }
+}
