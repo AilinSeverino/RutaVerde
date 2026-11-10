@@ -49,9 +49,13 @@ export async function crearBaldosa(req, res) {
             return res.status(400).json({ success: false, error: "La imagen es obligatoria." });
         }
 
-        const tamanioNumero = Number(tamanio);
-        if (!tamanio || isNaN(tamanioNumero) || tamanioNumero < 1 || tamanioNumero > 500) {
-            return res.status(400).json({ success: false, error: "El tamaño debe ser entre 1 y 500." });
+        const tamanioTexto = String(tamanio ?? '').trim();
+        const tamanioNumero = Number(tamanioTexto);
+        if (!/^\d+$/.test(tamanioTexto) || !Number.isSafeInteger(tamanioNumero)) {
+            return res.status(400).json({ success: false, error: "El tamaño debe ser un número entero de centímetros." });
+        }
+        if (tamanioNumero < 1 || tamanioNumero > 10000) {
+            return res.status(400).json({ success: false, error: "El tamaño debe estar entre 1 y 10000 cm." });
         }
 
         // 3. Le pasamos 'plantaEntrada' a baldosaService (tu servicio se encarga del resto)

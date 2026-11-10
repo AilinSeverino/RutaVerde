@@ -1,6 +1,11 @@
 // src/services/noticiaService.js
 import { supabase, getSupabaseAdmin } from '../config/supabase.js';
 
+function resumir(texto, max = 160) {
+  const limpio = String(texto || '').replace(/\s+/g, ' ').trim();
+  return limpio.length > max ? `${limpio.slice(0, max).trim()}…` : limpio;
+}
+
 function normalizarNoticia(n) {
   const aprobada = n?.aprobada === true || n?.aprobada === 'true' || n?.aprobada === 1 || n?.aprobada === '1';
 
@@ -11,6 +16,9 @@ function normalizarNoticia(n) {
     subtitulo: n?.subtitulo ?? '',
     contenido: n?.cuerpo ?? n?.contenido ?? '',
     cuerpo: n?.cuerpo ?? n?.contenido ?? '',
+    descripcion: resumir(n?.cuerpo ?? n?.contenido ?? ''),
+    autor: n?.autor ?? 'Ruta Verde',
+    imagen: n?.url_foto ?? n?.foto ?? '',
     foto: n?.url_foto ?? n?.foto ?? null,
     url_foto: n?.url_foto ?? n?.foto ?? null,
     fecha: n?.fecha_publicacion ?? n?.fecha ?? null,
@@ -98,11 +106,16 @@ export async function actualizarEstadoNoticia(idNoticia, aprobada) {
 // --- Editar Noticia (Backoffice) ---
 export async function editarNoticia(idNoticia, campos) {
   try {
-    const payload = { ...campos };
+    // Solo columnas reales de la tabla (el backoffice manda también campos derivados)
+    const payload = {};
 
-    if (payload.titulo !== undefined) payload.titulo = String(payload.titulo).trim();
-    if (payload.cuerpo !== undefined) payload.cuerpo = String(payload.cuerpo).trim();
-    if (payload.contenido !== undefined) payload.cuerpo = String(payload.contenido).trim();
+    if (campos.titulo !== undefined) payload.titulo = String(campos.titulo).trim();
+    if (campos.cuerpo !== undefined) payload.cuerpo = String(campos.cuerpo).trim();
+    if (campos.contenido !== undefined) payload.cuerpo = String(campos.contenido).trim();
+
+    if (Object.keys(payload).length === 0) {
+      return { success: false, error: 'No hay campos válidos para editar.' };
+    }
 
     const { data, error } = await getSupabaseAdmin()
       .from('Noticias')

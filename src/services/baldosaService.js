@@ -12,7 +12,9 @@ export async function obtenerTodasLasBaldosas() {
         nombrePlanta,
         id_region,
         aprobada,
-        Usuarios ( nombreC, email )
+        fechapubli,
+        Usuarios ( nombreC, email ),
+        Regiones ( nombre )
       `)
       .order('id_baldosa', { ascending: false });
 
@@ -34,6 +36,12 @@ export async function obtenerTodasLasBaldosas() {
         nombrePlanta: b.nombrePlanta,
         foto: b.url_imagen,
         url_imagen: b.url_imagen,
+        imagen: b.url_imagen || '',
+        region: b.Regiones?.nombre || 'Sin región',
+        id_region: b.id_region,
+        fecha: b.fechapubli ? new Date(b.fechapubli).toLocaleDateString('es-AR') : '',
+        fechapubli: b.fechapubli,
+        tamano: b.tamanio != null ? `${b.tamanio} cm` : '',
         tamanio: b.tamanio,
         comentarios: b.comentarios,
         estado: estadoTexto,
