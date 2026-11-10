@@ -27,5 +27,7 @@ npm --prefix backend install express nodemailer
 # 4. Instalar dependencias del Backoffice 
 npm --prefix backoffice install
 
-#5. Iniciar el proyecto
+# 5. dentro de la carpeta del backend crear un archivo .env en el cual vas a pegar los valores que hay en el documento en la pestaña .env
+
+#6. Iniciar el proyecto
 npm run dev
