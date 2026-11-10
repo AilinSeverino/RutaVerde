@@ -10,7 +10,7 @@ Los dos repos en uno con tres apps independientes:
 
 ## Puesta en marcha
 
-Requisitos: Node.js (LTS) y Git.
+Requisitos: tenes instalado Node.js (LTS) y Git.
 
 ```bash
 git clone https://github.com/AilinSeverino/RutaVerde.git
