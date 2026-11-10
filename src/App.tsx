@@ -8,6 +8,7 @@ import MapaPage from './pages/Mapa';
 import Perfil from './pages/Perfil';
 import InicioForm from './components/InicioForm';
 import RegistroForm from './components/RegistroForm';
+import RecuperarContrasenia from './components/RecuperarContrasenia';
 import Footer from './components/Footer';
 import { AuthProvider } from './context/AuthContext';
 
@@ -22,6 +23,7 @@ function App() {
           <Route path="/aportes" element={<Aportes />} />
           <Route path="/newsletter" element={<Newsletter />} />
           <Route path="/ingresar" element={<InicioForm />} />
+          <Route path="/recuperar" element={<RecuperarContrasenia />} />
           <Route path="/registrarse" element={<RegistroForm />} />
           <Route path="/perfil" element={<Perfil />} />
         </Routes>

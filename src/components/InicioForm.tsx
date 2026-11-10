@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import './InicioForm.css';
 import api from '../../api.js';
 import { useAuth } from '../context/AuthContext';
@@ -10,6 +10,8 @@ interface InicioFormProps {
 
 const InicioForm: React.FC<InicioFormProps> = ({ onRegisterClick }) => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const volverA: string = location.state?.from ?? '/';
   const { login } = useAuth();
 
   // Estados para Login
@@ -104,13 +106,18 @@ const InicioForm: React.FC<InicioFormProps> = ({ onRegisterClick }) => {
 
   // Función aux para guardar sesión en React Context e ingresar
   const completarLogin = (usuarioData: any) => {
+    if (Number(usuarioData?.id_rol) === 1) {
+      window.location.assign('http://localhost:5174');
+      return;
+    }
+
     login({
       id: usuarioData?.id ?? usuarioData?.id_usuario ?? 0,
       nombre: usuarioData?.nombre ?? usuarioData?.nombreC ?? email.split('@')[0],
       email: usuarioData?.email ?? email,
       ...usuarioData,
     });
-    navigate('/perfil');
+    navigate(volverA);
   };
 
   return (
@@ -181,7 +188,7 @@ const InicioForm: React.FC<InicioFormProps> = ({ onRegisterClick }) => {
               <button
                 type="button"
                 className="btn-register-outline"
-                onClick={() => onRegisterClick ? onRegisterClick() : navigate('/registrarse')}
+                onClick={() => onRegisterClick ? onRegisterClick() : navigate('/registrarse', { state: location.state })}
               >
                 Crear una cuenta
               </button>

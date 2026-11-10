@@ -1,4 +1,5 @@
-import { createContext, useContext, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import api from '../../api.js';
 
 // Interfaz alineada exactamente con la tabla "Usuarios" de la BD
 export interface Usuario {
@@ -16,8 +17,9 @@ export interface Usuario {
 interface AuthContextValue {
   usuario: Usuario | null;
   isLoggedIn: boolean;
+  authLoading: boolean;
   login: (usuario: Usuario) => void;
-  logout: () => void;
+  logout: () => Promise<void>;
   updateUsuario: (usuario: Partial<Usuario>) => void;
 }
 
@@ -26,28 +28,53 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const STORAGE_KEY = 'ruta-verde-usuario';
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [usuario, setUsuario] = useState<Usuario | null>(() => {
-    try {
-      const guardado = window.localStorage.getItem(STORAGE_KEY);
-      return guardado ? (JSON.parse(guardado) as Usuario) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [usuario, setUsuario] = useState<Usuario | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    api.get('/api/sesion', { withCredentials: true })
+      .then(({ data }) => {
+        if (cancelled) return;
+        const usuarioVerificado = data?.usuario as Usuario | undefined;
+        if (!usuarioVerificado) throw new Error('La sesión no devolvió un usuario válido.');
+        setUsuario(usuarioVerificado);
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(usuarioVerificado));
+        window.localStorage.removeItem('usuario');
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setUsuario(null);
+        window.localStorage.removeItem(STORAGE_KEY);
+        window.localStorage.removeItem('usuario');
+      })
+      .finally(() => {
+        if (!cancelled) setAuthLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const login = (nuevoUsuario: Usuario) => {
     setUsuario(nuevoUsuario);
     window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nuevoUsuario));
   };
 
-  const logout = () => {
+  const logout = async () => {
     const seguro = window.confirm("¿Estás seguro de que deseas cerrar sesión?");
-    if (seguro) {
+    if (!seguro) return;
+
+    try {
+      await api.post('/api/logout', {}, { withCredentials: true });
+    } catch (error) {
+      console.error('Error al cerrar la sesión en el servidor:', error);
+    } finally {
       setUsuario(null);
       window.localStorage.removeItem(STORAGE_KEY);
-      console.log("Sesión cerrada correctamente");
-    } else {
-      console.log("Acción cancelada");
+      window.localStorage.removeItem('usuario');
     }
   };
 
@@ -62,12 +89,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<AuthContextValue>(
     () => ({
       usuario,
-      isLoggedIn: Boolean(usuario),
+      isLoggedIn: !authLoading && Boolean(usuario),
+      authLoading,
       login,
       logout,
       updateUsuario,
     }),
-    [usuario],
+    [usuario, authLoading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

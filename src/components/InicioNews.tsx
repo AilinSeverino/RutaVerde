@@ -1,11 +1,18 @@
 import React, { useState } from 'react';
-import { noticias } from '../data/noticias';
+import { noticias as noticiasEjemplo } from '../data/noticias';
+import type { Noticia } from '../data/noticias';
 import NoticiaModal from './NoticiaModal';
 import './InicioNews.css';
 
-const InicioNews: React.FC = () => {
+interface InicioNewsProps {
+  noticias?: Noticia[];
+}
+
+const InicioNews: React.FC<InicioNewsProps> = ({ noticias = noticiasEjemplo }) => {
   const destacada = noticias[0];
   const [abierta, setAbierta] = useState(false);
+
+  if (!destacada) return null;
 
   return (
     <>

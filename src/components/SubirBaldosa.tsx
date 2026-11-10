@@ -1,6 +1,9 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '../../api';
+import { useAuth } from '../context/AuthContext';
 import './SubirBaldosa.css';
+import './SubirNoticiaModal.css';
 
 interface SubirBaldosaProps {
   onRegisterClick?: () => void;
@@ -11,8 +14,16 @@ interface Region {
   nombre: string;
 }
 
+interface Aviso {
+  tipo: 'success' | 'error';
+  titulo: string;
+  mensaje: string;
+}
+
 const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const navigate = useNavigate();
+  const { isLoggedIn, authLoading } = useAuth();
 
   // Estados del formulario
   const [planta, setPlanta] = useState('');
@@ -24,6 +35,14 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
   const [comentarios, setComentarios] = useState('');
   const [imagenArchivo, setImagenArchivo] = useState<File | null>(null);
   const [nombreImagen, setNombreImagen] = useState('Ningún archivo seleccionado');
+  const [aviso, setAviso] = useState<Aviso | null>(null);
+  const [subiendo, setSubiendo] = useState(false);
+
+  useEffect(() => {
+    if (!aviso || aviso.tipo === 'success') return;
+    const timer = window.setTimeout(() => setAviso(null), 5000);
+    return () => window.clearTimeout(timer);
+  }, [aviso]);
 
   // Buscar ecorregiones asociadas a la planta
   const buscarRegionesPorPlanta = async (nombrePlanta: string) => {
@@ -84,12 +103,20 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
   const manejarEnvio = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (subiendo || !isLoggedIn) return;
+
     if (!planta || !region || !tamano || !imagenArchivo) {
-      alert("Por favor, completa los campos obligatorios y sube una imagen.");
+      setAviso({
+        tipo: 'error',
+        titulo: 'Faltan datos',
+        mensaje: 'Completá los campos obligatorios y seleccioná una imagen.'
+      });
       return;
     }
 
     try {
+      setAviso(null);
+      setSubiendo(true);
       const formData = new FormData();
       formData.append('nombrePlanta', planta);
       formData.append('idRegion', region);
@@ -98,11 +125,16 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
       formData.append('imagen', imagenArchivo);
 
       const respuesta = await api.post('/api/baldosas', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
+        headers: { 'Content-Type': 'multipart/form-data' },
+        withCredentials: true
       });
 
       if (respuesta.status === 201 || respuesta.status === 200 || respuesta.data?.success) {
-        alert("¡Baldosa guardada con éxito!");
+        setAviso({
+          tipo: 'success',
+          titulo: '¡Baldosa subida con éxito!',
+          mensaje: 'Tu aporte quedó guardado y está pendiente de aprobación.'
+        });
         setPlanta('');
         setRegion('');
         setRegionesFiltradas([]);
@@ -110,15 +142,74 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
         setComentarios('');
         setImagenArchivo(null);
         setNombreImagen('Ningún archivo seleccionado');
+        if (fileInputRef.current) fileInputRef.current.value = '';
       }
     } catch (error: any) {
       console.error("Error al subir la baldosa:", error.response?.data?.error || error.message);
-      alert(error.response?.data?.error || "Hubo un problema al subir la baldosa.");
+      setAviso({
+        tipo: 'error',
+        titulo: 'No se pudo subir la baldosa',
+        mensaje: error.response?.data?.error || 'Hubo un problema al subir el aporte. Probá de nuevo.'
+      });
+    } finally {
+      setSubiendo(false);
     }
   };
 
+  if (authLoading) return null;
+
+  if (!isLoggedIn) {
+    return (
+      <div className="login-container">
+        <div className="login-card">
+          <h1 className="login-title">Subir baldosa</h1>
+          <p className="login-subtitle">Para subir un aporte necesitás tener una cuenta</p>
+          <hr className="divider" />
+          <div className="login-form">
+            <button type="button" className="btn-login-submit" onClick={() => navigate('/ingresar', { state: { from: '/aportes' } })}>
+              Iniciar sesión
+            </button>
+            <button type="button" className="btn-login-submit" onClick={() => navigate('/registrarse', { state: { from: '/aportes' } })}>
+              Registrarme
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="login-container">
+      {aviso?.tipo === 'error' && (
+        <div className={`aporte-aviso aporte-aviso--${aviso.tipo}`} role={aviso.tipo === 'error' ? 'alert' : 'status'} aria-live="polite">
+          <span className="aporte-aviso__icono" aria-hidden="true">!</span>
+          <div className="aporte-aviso__texto">
+            <strong>{aviso.titulo}</strong>
+            <p>{aviso.mensaje}</p>
+          </div>
+          <button type="button" className="aporte-aviso__cerrar" aria-label="Cerrar aviso" onClick={() => setAviso(null)}>
+            ×
+          </button>
+        </div>
+      )}
+      {aviso?.tipo === 'success' && (
+        <div className="pu-modal-overlay" onClick={() => setAviso(null)} role="dialog" aria-modal="true">
+          <div className="pu-modal pu-modal-noticia" onClick={(event) => event.stopPropagation()}>
+            <div className="pu-modal-header">
+              <h2 className="pu-modal-title">Aporte enviado</h2>
+              <button className="pu-modal-close" onClick={() => setAviso(null)} aria-label="Cerrar">✕</button>
+            </div>
+            <div className="pu-noticia-enviada">
+              <p className="pu-noticia-enviada-icon">✅</p>
+              <p className="pu-noticia-enviada-titulo">¡Baldosa subida con éxito!</p>
+              <p className="pu-noticia-enviada-sub">{aviso.mensaje}</p>
+              <button className="pu-modal-btn-save" style={{ marginTop: '1.5rem' }} onClick={() => setAviso(null)}>
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="login-card">
         <h1 className="login-title">Subir baldosa</h1>
         <p className="login-subtitle">Sumáte al corredor biológico</p>
@@ -210,7 +301,9 @@ const SubirBaldosa: React.FC<SubirBaldosaProps> = () => {
             </div>
           </div>
 
-          <button type="submit" className="btn-login-submit">Subir baldosa</button>
+          <button type="submit" className="btn-login-submit" disabled={subiendo}>
+            {subiendo ? 'Subiendo...' : 'Subir baldosa'}
+          </button>
         </form>
       </div>
     </div>

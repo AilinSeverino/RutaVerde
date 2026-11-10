@@ -7,7 +7,9 @@ const HistoLand: React.FC = () => {
       <div className="histoland-container">
         <h2 className="histoland-title">Nuestra historia</h2>
         <p className="histoland-description">
-          Ruta Verde es una iniciativa de la Red Solidaria que busca movilizar a la comunidad para crear un corredor biológico a lo largo del continente.
+          Ruta Verde es una iniciativa de la{' '}
+          <a href="https://www.instagram.com/redsolidaria/" target="_blank" rel="noopener noreferrer" className="histoland-link">Red Solidaria</a>
+          {' '}que busca movilizar a la comunidad para crear un corredor biológico a lo largo del continente.
         </p>
         
       </div>

@@ -44,3 +44,19 @@
     font-size: 1.65rem;      /* era 2.5rem */
   }
 }
+.carru-noti-subir {
+  margin-top: 1rem;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+.carru-noti-subir-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}

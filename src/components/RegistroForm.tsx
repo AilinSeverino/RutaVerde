@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import api from '../../api.js';
 import './RegistroForm.css';
 import { useAuth } from '../context/AuthContext';
 
 const RegistroForm: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
   const [nombre, setNombre] = useState('');
   const [email, setEmail] = useState('');
@@ -78,7 +79,7 @@ const RegistroForm: React.FC = () => {
         email: usuarioData?.email ?? email,
         ...usuarioData,
       });
-      navigate('/perfil');
+      navigate(location.state?.from ?? '/perfil');
     } catch (error: any) {
       const msg: string = error.response?.data?.error ?? error.message ?? '';
       if (msg.toLowerCase().includes('email') || msg.toLowerCase().includes('correo')) {
@@ -194,7 +195,7 @@ const RegistroForm: React.FC = () => {
         <div className="registro-footer">
           <button
             type="button"
-            onClick={() => navigate('/ingresar')}
+            onClick={() => navigate('/ingresar', { state: location.state })}
             className="login-link"
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'inherit', textDecoration: 'underline' }}
           >

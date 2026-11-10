@@ -40,3 +40,7 @@
   font-size: 0.9rem;
   line-height: 1.6;
 }
+.inicio-subtitle-link {
+  color: inherit;
+  text-decoration: underline;
+}

@@ -178,7 +178,7 @@ const PerfilUser: React.FC = () => {
                 src={fotoPerfil}
                 alt={nombre}
                 className="pu-avatar-img"
-                onError={(e) => console.error("Error al cargar la imagen con la URL:", fotoPerfil)}
+                onError={() => console.error("Error al cargar la imagen con la URL:", fotoPerfil)}
               />
             ) : (
               <div className="pu-avatar-placeholder">
@@ -188,9 +188,12 @@ const PerfilUser: React.FC = () => {
               </div>
             )}
           </div>
-          <button className="pu-btn-editar" onClick={() => setModalPerfil(true)}>
-            Editar Perfil
-          </button>
+          <div className="pu-acciones">
+            <button className="pu-btn-editar" onClick={() => setModalPerfil(true)}>
+              Editar Perfil
+            </button>
+            <button className="pu-btn-logout" onClick={logout}>Cerrar sesión</button>
+          </div>
         </div>
 
         <h1 className="pu-nombre">{nombre}</h1>
@@ -232,10 +235,6 @@ const PerfilUser: React.FC = () => {
       {modalPerfil && <EditModal onClose={() => setModalPerfil(false)} />}
       {modalNoticia && <SubirNoticiaModal onClose={() => setModalNoticia(false)} />}
       {noticiaAbierta && <NoticiaModal noticia={noticiaAbierta} onClose={handleNoticiaClose} />}
-
-      <div className="pu-logout-wrap">
-        <button className="pu-btn-logout" onClick={logout}>Cerrar sesión</button>
-      </div>
     </div>
   );
 };

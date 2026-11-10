@@ -1,3 +1,5 @@
+import api from '../../api.js';
+
 export interface Noticia {
   id: number;
   titulo: string;
@@ -88,3 +90,26 @@ Se plantaron 500 ejemplares de palma yatay, especie emblemática de la región y
 La experiencia abre la puerta a futuras colaboraciones con organizaciones de Brasil, Paraguay y Bolivia dentro del corredor sudamericano.`
   }
 ];
+
+export async function obtenerNoticiasPublicadas(): Promise<Noticia[]> {
+  const respuesta = await api.get('/api/noticias');
+  const respuestaData: unknown = respuesta.data;
+  const registros = Array.isArray(respuestaData)
+    ? respuestaData
+    : typeof respuestaData === 'object' && respuestaData !== null && 'data' in respuestaData && Array.isArray(respuestaData.data)
+      ? respuestaData.data
+      : [];
+
+  return registros
+    .filter((registro): registro is Record<string, unknown> => typeof registro === 'object' && registro !== null)
+    .filter((registro) => registro.estado === 'publicada' || registro.aprobada === true)
+    .map((registro, index) => ({
+      id: Number(registro.id ?? registro.id_noticia ?? index),
+      titulo: String(registro.titulo ?? ''),
+      descripcion: String(registro.descripcion ?? registro.subtitulo ?? registro.resumen ?? ''),
+      fecha: String(registro.fecha ?? registro.fecha_publicacion ?? ''),
+      lectura: String(registro.lectura ?? '3 min de lectura'),
+      imagen: String(registro.imagen ?? registro.url_foto ?? registro.foto ?? ''),
+      cuerpo: String(registro.cuerpo ?? registro.contenido ?? registro.descripcion ?? ''),
+    }));
+}

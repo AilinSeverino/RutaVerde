@@ -1,10 +1,8 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import './MapaInteractivo.css';
 import Mapa from './Mapa';
 
 const MapaInteractivo: React.FC = () => {
-  const navigate = useNavigate();
   return (
     <section className="mapa-interactivo">
       <div className="mapa-container">
@@ -14,11 +12,11 @@ const MapaInteractivo: React.FC = () => {
             Visualizá dónde se realizan plantaciones y cómo podés participar.
           </p>
         </div>
-        
-        <div className="map-visual"  style={{ cursor: 'pointer' }}>
+
+        <div className="map-visual">
           <Mapa />
         </div>
-        </div>
+      </div>
     </section>
   );
 };

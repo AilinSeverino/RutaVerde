@@ -12,13 +12,11 @@ const Footer: React.FC = () => {
         </div>
       </div>
       <a
-        href="http://localhost:5174"
-        target="_blank"
-        rel="noopener noreferrer"
+        href="http://localhost:5173/"
         className="footer-admin-link"
-        title="Backoffice"
+        title="Página principal"
       >
-        admin
+        Inicio
       </a>
     </footer>
   );

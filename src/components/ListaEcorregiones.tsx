@@ -4,15 +4,21 @@ import './ListaEcorregiones.css';
 
 interface ListaProps {
   regionSeleccionada?: Ecorregion | null;
+  onSeleccionarRegion?: (region: Ecorregion | null) => void;
 }
 
-const ListaEcorregiones: React.FC<ListaProps> = ({ regionSeleccionada }) => {
+const ListaEcorregiones: React.FC<ListaProps> = ({ 
+  regionSeleccionada, 
+  onSeleccionarRegion 
+}) => {
   const [ecorregiones, setEcorregiones] = useState<Ecorregion[]>([]);
   const [activa, setActiva] = useState<Ecorregion | null>(null);
 
   useEffect(() => {
     obtenerEcorregiones().then((data) => setEcorregiones(data));
-  }, []); useEffect(() => {
+  }, []);
+
+  useEffect(() => {
     if (regionSeleccionada && ecorregiones.length > 0) {
       const regMap = regionSeleccionada as any;
 
@@ -50,11 +56,17 @@ const ListaEcorregiones: React.FC<ListaProps> = ({ regionSeleccionada }) => {
           }
         }, 100);
       }
+    } else if (regionSeleccionada === null) {
+      setActiva(null);
     }
   }, [regionSeleccionada, ecorregiones]);
 
   const handleClick = (eco: Ecorregion) => {
-    setActiva((prev) => (prev?.id === eco.id ? null : eco));
+    const nuevaActiva = activa?.id === eco.id ? null : eco;
+    setActiva(nuevaActiva);
+    if (onSeleccionarRegion) {
+      onSeleccionarRegion(nuevaActiva);
+    }
   };
 
   const ecorregionesOrdenadas = [...ecorregiones].sort((a, b) => {
@@ -62,40 +74,40 @@ const ListaEcorregiones: React.FC<ListaProps> = ({ regionSeleccionada }) => {
     if (activa?.id === b.id) return 1;
     return 0;
   });
+
   return (
-  <div className="lista-eco">
-    <div className="lista-eco-header">
-      <p className="lista-eco-titulo">Ecorregiones de América Latina</p>
-    </div>
+    <div className="lista-eco">
+      <div className="lista-eco-header">
+        <p className="lista-eco-titulo">Ecorregiones de América Latina</p>
+      </div>
 
-    <div className="lista-eco-scroll">
-      {/* 2. Mapeamos la lista reordenada en lugar de la original */}
-      {ecorregionesOrdenadas.map((eco) => (
-        <React.Fragment key={eco.id}>
-          <div
-            id={`eco-${eco.id}`}
-            className={`eco-item ${activa?.id === eco.id ? 'activo' : ''}`}
-            onClick={() => handleClick(eco)}
-          >
-            <p className="eco-item-nombre">{eco.nombre}</p>
-            <p className="eco-item-paises">{eco.paises}</p>
-          </div>
-
-          {activa?.id === eco.id && (
-            <div className="eco-detalle">
-              <p className="eco-detalle-nombre">{eco.nombre}</p>
-              <p className="eco-detalle-resumen">{eco.resumen}</p>
-              <div className="eco-detalle-tags">
-                <span className="eco-tag">{eco.bioma}</span>
-                <span className="eco-tag">{eco.contribuciones} Arboles plantados</span>
-              </div>
+      <div className="lista-eco-scroll">
+        {ecorregionesOrdenadas.map((eco) => (
+          <React.Fragment key={eco.id}>
+            <div
+              id={`eco-${eco.id}`}
+              className={`eco-item ${activa?.id === eco.id ? 'activo' : ''}`}
+              onClick={() => handleClick(eco)}
+            >
+              <p className="eco-item-nombre">{eco.nombre}</p>
+              <p className="eco-item-paises">{eco.paises}</p>
             </div>
-          )}
-        </React.Fragment>
-      ))}
+
+            {activa?.id === eco.id && (
+              <div className="eco-detalle">
+                <p className="eco-detalle-nombre">{eco.nombre}</p>
+                <p className="eco-detalle-resumen">{eco.resumen}</p>
+                <div className="eco-detalle-tags">
+                  <span className="eco-tag">{eco.bioma}</span>
+                  <span className="eco-tag">{eco.contribuciones} Árboles plantados</span>
+                </div>
+              </div>
+            )}
+          </React.Fragment>
+        ))}
+      </div>
     </div>
-  </div>
-);
+  );
 };
 
 export default ListaEcorregiones;

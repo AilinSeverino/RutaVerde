@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import Header from '../components/Header';
 import MapaComponente from '../components/Mapa';
 import ListaEcorregiones from '../components/ListaEcorregiones';
@@ -15,12 +15,18 @@ export default function Mapa() {
         <div className="mapa-layout">
           {/* Lado izquierdo: mapa */}
           <div className="mapa-izquierda">
-              <MapaComponente onSeleccionarRegion={setRegionSeleccionada} />
+            <MapaComponente
+              onSeleccionarRegion={setRegionSeleccionada}
+              regionSeleccionada={regionSeleccionada}
+            />
           </div>
 
           {/* Lado derecho: lista de ecorregiones */}
           <div className="mapa-derecha">
-            <ListaEcorregiones regionSeleccionada={regionSeleccionada} />
+            <ListaEcorregiones
+              regionSeleccionada={regionSeleccionada}
+              onSeleccionarRegion={setRegionSeleccionada}
+            />
           </div>
         </div>
       </main>

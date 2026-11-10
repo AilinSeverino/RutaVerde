@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { noticias } from '../data/noticias';
+import { noticias as noticiasEjemplo } from '../data/noticias';
 import type { Noticia } from '../data/noticias';
 import NoticiaModal from './NoticiaModal';
 import './GrillaNews.css';
 
-const GrillaNews: React.FC = () => {
+interface GrillaNewsProps {
+  noticias?: Noticia[];
+}
+
+const GrillaNews: React.FC<GrillaNewsProps> = ({ noticias = noticiasEjemplo }) => {
   const [noticiaAbierta, setNoticiaAbierta] = useState<Noticia | null>(null);
 
   return (
@@ -13,7 +17,9 @@ const GrillaNews: React.FC = () => {
         <div className="grilla-news-container">
           <h2 className="grilla-news-titulo">Más noticias</h2>
           <div className="grilla-news-grid">
-            {noticias.map((noti) => (
+            {noticias.length === 0 ? (
+              <p>Todavía no hay noticias publicadas.</p>
+            ) : noticias.map((noti) => (
               <article
                 key={noti.id}
                 className="grilla-card"

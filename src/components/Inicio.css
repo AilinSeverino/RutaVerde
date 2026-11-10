@@ -98,3 +98,17 @@
     font-size: 1.6rem;
   }
 }
+.inicio-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.inicio-subtitle-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.inicio-subtitle-link:hover {
+  opacity: 0.8;
+}

@@ -37,3 +37,7 @@
     font-size: 0.875rem;     /* era 1.125rem */
   }
 }
+.histoland-link {
+  color: inherit;
+  text-decoration: underline;
+}

@@ -5,11 +5,14 @@ import Header from '../components/Header';
 import PerfilUser from '../components/PerfilUser';
 
 const Perfil: React.FC = () => {
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, authLoading } = useAuth();
 
-  // Si no está logueado, redirigir a /ingresar
+  if (authLoading) {
+    return <main className="perfil-verificando">Verificando sesión…</main>;
+  }
+
   if (!isLoggedIn) {
-    return <Navigate to="/ingresar" replace />;
+    return <Navigate to="/ingresar" state={{ from: '/perfil' }} replace />;
   }
 
   return (

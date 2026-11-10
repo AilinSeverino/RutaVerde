@@ -22,11 +22,11 @@
 }
 
 .modal-close {
-  position: sticky;
+  position: absolute;
   top: 0.75rem;
-  float: right;
-  margin: 0.75rem 0.75rem 0 0;
-  background: rgba(0,0,0,0.08);
+  right: 0.75rem;
+  margin: 0;
+  background: rgba(252, 250, 240, 0.92);
   border: none;
   border-radius: 50%;
   width: 2rem;
@@ -41,7 +41,7 @@
 }
 
 .modal-close:hover {
-  background: rgba(0,0,0,0.18);
+  background: #fff;
 }
 
 .modal-imagen {

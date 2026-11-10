@@ -11,12 +11,16 @@ export interface Ecorregion {
 
 export async function obtenerEcorregiones(): Promise<Ecorregion[]> {
   try {
-    const respuesta = await api.get('/api/ecoregiones');
+    const respuesta = await api.get('/api/regiones');
+    const payload = respuesta.data;
+    const data = Array.isArray(payload)
+      ? payload
+      : Array.isArray(payload?.data)
+        ? payload.data
+        : [];
 
-    const data = respuesta.data;
-
-    return (Array.isArray(data) ? data : []).map((item: any) => ({
-      id: item.id || '',
+    return data.map((item: any) => ({
+      id: String(item.id || item.id_region || ''),
       nombre: item.nombre || '',
       paises: item.paises || 'América Latina',
       resumen: item.resumen || item.descripcion || 'Sin descripción disponible.',
