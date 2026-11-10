@@ -1,107 +1,309 @@
 import { supabase } from '../config/supabase.js';
 import bcrypt from 'bcrypt';
+import { randomInt } from 'node:crypto';
 
 export async function registro(nombre, email, contrasenia, region) {
+  try {
+    // --- 1. VALIDACIONES DE ENTRADA ---
+    
+    // Campos requeridos
+    if (!nombre || !nombre.trim()) {
+        return { success: false, error: 'El nombre es obligatorio.' };
+    }
+    if (!email || !email.trim()) {
+        return { success: false, error: 'El correo electrónico es obligatorio.' };
+    }
+    if (!contrasenia) {
+        return { success: false, error: 'La contraseña es obligatoria.' };
+    }
+    if (!region || isNaN(parseInt(region))) {
+        return { success: false, error: 'Debes seleccionar una región válida.' };
+    }
+
+    // Formato de Email
+    const emailNormalizado = email.trim().toLowerCase();
+    const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!regexEmail.test(emailNormalizado)) {
+        return { success: false, error: 'El formato del correo electrónico no es válido.' };
+    }
+
+    // Fortaleza de la Contraseña (mínimo 8 caracteres, al menos 1 letra y 1 número)
+    if (contrasenia.length < 8) {
+        return { success: false, error: 'La contraseña debe tener al menos 8 caracteres.' };
+    }
+    const regexPasswordSegura = /^(?=.*[A-Za-z])(?=.*\d)/;
+    if (!regexPasswordSegura.test(contrasenia)) {
+        return { success: false, error: 'La contraseña debe contener al menos una letra y un número.' };
+    }
+
+    // --- 2. VALIDACIÓN DE DISPONIBILIDAD EN BD ---
+
+    const { data: usuarioExistente } = await supabase
+        .from('Usuarios')
+        .select('email')
+        .eq('email', emailNormalizado)
+        .maybeSingle();
+
+    if (usuarioExistente) {
+        return { success: false, error: 'El correo electrónico ya está registrado.' };
+    }
+
+    // --- 3. INSERCIÓN DE DATOS ---
+
+    const saltRounds = 10;
+    const contraseniaEncriptada = await bcrypt.hash(contrasenia, saltRounds);
+
+    const { data: nuevoUsuario, error: dbError } = await supabase
+        .from('Usuarios')
+        .insert([
+            { 
+                nombreC: nombre.trim(),
+                email: emailNormalizado, 
+                contrasena: contraseniaEncriptada,
+                id_region: parseInt(region),
+                id_rol: 2,
+                fechaR: new Date().toISOString()
+            }
+        ])
+        .select();
+
+    if (dbError) {
+        return { success: false, error: `Error en BD: ${dbError.message}` };
+    }
+
+    return { success: true, message: 'Usuario registrado con éxito.', data: nuevoUsuario[0] };
+
+  } catch (error) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function login(email, contrasenia) {
+  if (!email || !contrasenia) {
+    return null;
+  }
+
+  const emailNormalizado = email.trim().toLowerCase();
+
+  const { data: usuario, error } = await supabase
+    .from('Usuarios')
+    .select('*')
+    .eq('email', emailNormalizado)
+    .maybeSingle();
+
+  if (error || !usuario) {
+    return null;
+  }
+
+  const contraseniaValida = await bcrypt.compare(contrasenia, usuario.contrasena);
+  if (!contraseniaValida) {
+    return null;
+  }
+
+  const { contrasena, ...usuarioSeguro } = usuario;
+  return usuarioSeguro;
+}
+
+// 1. SOLICITAR LOGIN (Genera y guarda el código 2FA)
+export async function solicitarLogin(email, contrasenia) {
     try {
-        // --- 1. VALIDACIONES DE ENTRADA ---
-        
-        // Campos requeridos
-        if (!nombre || !nombre.trim()) {
-            return { success: false, error: 'El nombre es obligatorio.' };
-        }
-        if (!email || !email.trim()) {
-            return { success: false, error: 'El correo electrónico es obligatorio.' };
-        }
-        if (!contrasenia) {
-            return { success: false, error: 'La contraseña es obligatoria.' };
-        }
-        if (!region || isNaN(parseInt(region))) {
-            return { success: false, error: 'Debes seleccionar una región válida.' };
-        }
-
-        // Formato de Email
-        const emailNormalizado = email.trim().toLowerCase();
-        const regexEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!regexEmail.test(emailNormalizado)) {
-            return { success: false, error: 'El formato del correo electrónico no es válido.' };
-        }
-
-        // Fortaleza de la Contraseña (mínimo 8 caracteres, al menos 1 letra y 1 número)
-        if (contrasenia.length < 8) {
-            return { success: false, error: 'La contraseña debe tener al menos 8 caracteres.' };
-        }
-        const regexPasswordSegura = /^(?=.*[A-Za-z])(?=.*\d)/;
-        if (!regexPasswordSegura.test(contrasenia)) {
-            return { success: false, error: 'La contraseña debe contener al menos una letra y un número.' };
-        }
-
-        // --- 2. VALIDACIÓN DE DISPONIBILIDAD EN BD ---
-
-        const { data: usuarioExistente } = await supabase
+        const emailNormalizado = (email || '').trim().toLowerCase();
+        const { data: usuario, error } = await supabase
             .from('Usuarios')
-            .select('email')
+            .select('*')
             .eq('email', emailNormalizado)
             .maybeSingle();
 
-        if (usuarioExistente) {
-            return { success: false, error: 'El correo electrónico ya está registrado.' };
+        if (error || !usuario) {
+            return { success: false, error: 'Correo o contraseña incorrectos.' };
         }
 
-        // --- 3. INSERCIÓN DE DATOS ---
+        const contraseniaValida = await bcrypt.compare(contrasenia, usuario.contrasena);
+        
+        if (!contraseniaValida) {
+            return { success: false, error: 'Correo o contraseña incorrectos.' };
+        }
 
-        const saltRounds = 10;
-        const contraseniaEncriptada = await bcrypt.hash(contrasenia, saltRounds);
+        const { contrasena, codigo_2fa, expiracion_2fa, ...usuarioSeguro } = usuario;
 
-        const { data: nuevoUsuario, error: dbError } = await supabase
+        if (Number(usuario.id_rol) !== 1) {
+            return { success: true, requiereCodigo: false, usuario: usuarioSeguro };
+        }
+
+        const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+        const expiracion = new Date(Date.now() + 10 * 60 * 1000).toISOString();
+
+        const { error: updateError } = await supabase
             .from('Usuarios')
-            .insert([
-                { 
-                    nombreC: nombre.trim(),
-                    email: emailNormalizado, 
-                    contrasena: contraseniaEncriptada,
-                    id_region: parseInt(region),
-                    id_rol: 2,
-                    fechaR: new Date().toISOString()
-                }
-            ])
-            .select();
+            .update({ codigo_2fa: codigo, expiracion_2fa: expiracion })
+            .eq('id_usuario', usuario.id_usuario);
 
-        if (dbError) {
-            return { success: false, error: `Error en BD: ${dbError.message}` };
+        if (updateError) {
+            console.error('Error al guardar código 2FA en Supabase:', updateError.message);
+            return { success: false, error: 'Error al generar el código de verificación.' };
         }
 
-        return { success: true, message: "Usuario registrado con éxito.", data: nuevoUsuario[0] };
+        return { success: true, requiereCodigo: true, usuario: usuarioSeguro, codigo };
 
     } catch (error) {
         return { success: false, error: error.message };
     }
 }
 
-export async function login(email, contrasenia) {
-    if (!email || !contrasenia) {
-        return null;
+// 2. VERIFICAR CÓDIGO INGRESADO
+export async function verificarCodigoLogin(email, codigoIngresado) {
+    try {
+        const { data: usuario, error } = await supabase
+            .from('Usuarios')
+            .select('*')
+            .eq('email', email)
+            .maybeSingle();
+
+        if (error || !usuario || !usuario.codigo_2fa) {
+            return { success: false, error: 'Código inválido o sesión no iniciada.' };
+        }
+
+        if (new Date() > new Date(usuario.expiracion_2fa)) {
+            return { success: false, error: 'El código ha expirado. Vuelve a iniciar sesión.' };
+        }
+
+        if (usuario.codigo_2fa !== codigoIngresado.trim()) {
+            return { success: false, error: 'El código ingresado es incorrecto.' };
+        }
+
+        await supabase
+            .from('Usuarios')
+            .update({ codigo_2fa: null, expiracion_2fa: null })
+            .eq('id_usuario', usuario.id_usuario);
+
+        const { contrasena, codigo_2fa, expiracion_2fa, ...usuarioSeguro } = usuario;
+        return { success: true, usuario: usuarioSeguro };
+
+    } catch (error) {
+        return { success: false, error: error.message };
     }
+}
 
-    const emailNormalizado = email.trim().toLowerCase();
+export async function solicitarRecuperacionContrasenia(email) {
+    try {
+        const emailNormalizado = (email || '').trim().toLowerCase();
+        if (!emailNormalizado) {
+            return { success: false, error: 'Ingresá tu correo electrónico.' };
+        }
 
-    const { data: usuario, error } = await supabase
-        .from('Usuarios')
-        .select('*')
-        .eq('email', emailNormalizado)
-        .maybeSingle();
+        const { data: usuario, error } = await supabase
+            .from('Usuarios')
+            .select('id_usuario, nombreC, email')
+            .eq('email', emailNormalizado)
+            .maybeSingle();
 
-    if (!usuario) {
-        return null; 
+        if (error) return { success: false, error: error.message };
+        if (!usuario) return { success: true, usuario: null };
+
+        const codigo = randomInt(100000, 1000000).toString();
+        const expiracion = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+        const { error: updateError } = await supabase
+            .from('Usuarios')
+            .update({ codigo_recuperacion: codigo, expiracion_recuperacion: expiracion })
+            .eq('id_usuario', usuario.id_usuario);
+
+        if (updateError) return { success: false, error: updateError.message };
+
+        return { success: true, usuario, codigo };
+    } catch (error) {
+        return { success: false, error: error.message };
     }
+}
 
-    const contraseniaValida = await bcrypt.compare(contrasenia, usuario.contrasena);
+export async function restablecerContrasenia(email, codigoIngresado, nuevaContrasenia) {
+    try {
+        if (!nuevaContrasenia || nuevaContrasenia.length < 8 || !/^(?=.*[A-Za-z])(?=.*\d)/.test(nuevaContrasenia)) {
+            return { success: false, error: 'La contraseña debe tener 8 caracteres, una letra y un número.' };
+        }
 
-    if (!contraseniaValida) {
-        return null; 
+        const emailNormalizado = (email || '').trim().toLowerCase();
+        const { data: usuario, error } = await supabase
+            .from('Usuarios')
+            .select('id_usuario, codigo_recuperacion, expiracion_recuperacion')
+            .eq('email', emailNormalizado)
+            .maybeSingle();
+
+        if (error) return { success: false, error: error.message };
+        if (!usuario || !usuario.codigo_recuperacion || !usuario.expiracion_recuperacion) {
+            return { success: false, error: 'El código es inválido o venció. Solicitá uno nuevo.' };
+        }
+
+        if (new Date(usuario.expiracion_recuperacion).getTime() <= Date.now()) {
+            return { success: false, error: 'El código venció. Solicitá uno nuevo.' };
+        }
+
+        if (usuario.codigo_recuperacion !== String(codigoIngresado || '').trim()) {
+            return { success: false, error: 'El código ingresado es incorrecto.' };
+        }
+
+        const hash = await bcrypt.hash(nuevaContrasenia, 10);
+        const { error: updateError } = await supabase
+            .from('Usuarios')
+            .update({
+                contrasena: hash,
+                codigo_recuperacion: null,
+                expiracion_recuperacion: null
+            })
+            .eq('id_usuario', usuario.id_usuario);
+
+        if (updateError) return { success: false, error: updateError.message };
+        return { success: true };
+    } catch (error) {
+        return { success: false, error: error.message };
     }
+}
 
-    const { contrasena, ...usuarioSeguro } = usuario;
-    return usuarioSeguro; 
+export async function actualizarNombreUsuario(idUsuario, nuevoNombre) {
+    try {
+        const { data, error } = await supabase
+            .from('Usuarios')
+            .update({ nombreC: nuevoNombre.trim() })
+            .eq('id_usuario', parseInt(idUsuario))
+            .select();
+
+        if (error) {
+            return { success: false, error: error.message };
+        }
+
+        if (!data || data.length === 0) {
+            return { success: false, error: 'Usuario no encontrado.' };
+        }
+
+        const { contrasena, ...usuarioSeguro } = data[0];
+        return { success: true, message: 'Nombre actualizado correctamente.', data: usuarioSeguro };
+
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
+}
+
+export async function subirFotoPerfil(idUsuario, archivoFoto) {
+    try {
+        if (!archivoFoto) {
+            return { success: false, error: 'No se recibió ninguna imagen.' };
+        }
+
+        const base64Imagen = `data:${archivoFoto.mimetype};base64,${archivoFoto.buffer.toString('base64')}`;
+
+        const { data, error } = await supabase
+            .from('Usuarios')
+            .update({ fotoPerfil: base64Imagen })
+            .eq('id_usuario', parseInt(idUsuario))
+            .select();
+
+        if (error) {
+            return { success: false, error: `Error en BD: ${error.message}` };
+        }
+
+        return { success: true, fotoPerfil: base64Imagen };
+    } catch (error) {
+        return { success: false, error: error.message };
+    }
 }
 
 export const actualizarNombreUsuarioService = async (idUsuario, nombre) => {
@@ -124,7 +326,7 @@ export const actualizarFotoPerfilService = async (idUsuario, archivo) => {
   const fileExt = archivo.originalname.split('.').pop();
   const fileName = `${idUsuario}_${Date.now()}.${fileExt}`;
 
-  const { data: uploadData, error: uploadError } = await supabase.storage
+  const { error: uploadError } = await supabase.storage
     .from(nombreBucket)
     .upload(fileName, archivo.buffer, {
       contentType: archivo.mimetype, 

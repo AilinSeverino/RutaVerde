@@ -4,13 +4,19 @@ import { mejorarNoticiaService } from '../services/iaService.js';
 export async function crearNoticia (req, res) {
   try {
     const { titulo, subtitulo, cuerpo } = req.body;
-    
-    // Obtenemos id_usuario del token de autenticación (si usas authMiddleware) o del body
     const id_usuario = req.usuario?.id || req.body.id_usuario;
 
-    if (!titulo || !cuerpo || !id_usuario) {
-      return res.status(400).json({ 
-        error: 'El título, el cuerpo de la noticia y el id_usuario son obligatorios.' 
+    if (!titulo || !titulo.trim()) {
+      return res.status(400).json({ error: 'El título es obligatorio.' });
+    }
+
+    if (!cuerpo || !cuerpo.trim()) {
+      return res.status(400).json({ error: 'El cuerpo de la noticia es obligatorio.' });
+    }
+
+    if (!id_usuario) {
+      return res.status(400).json({
+        error: 'El id_usuario es obligatorio.'
       });
     }
 
@@ -19,7 +25,7 @@ export async function crearNoticia (req, res) {
       subtitulo,
       cuerpo,
       id_usuario,
-      file: req.file // El middleware de Multer inyecta req.file si se envió imagen
+      file: req.file
     });
 
     return res.status(201).json({
@@ -44,16 +50,20 @@ export const mejorarNoticia = async (req, res) => {
     const { titulo, descripcion } = req.body;
 
     if (!descripcion || descripcion.trim() === '') {
-      return res.status(400).json({ error: 'La descripción es obligatoria para poder mejorar la noticia.' });
+      return res.status(400).json({
+        success: false,
+        error: 'La descripción es obligatoria para poder mejorar la noticia.'
+      });
     }
 
     const noticiaMejorada = await mejorarNoticiaService(titulo || '', descripcion);
 
     return res.status(200).json({
+      success: true,
       mensaje: 'Noticia mejorada exitosamente',
-      data: noticiaMejorada,
+      data: noticiaMejorada
     });
   } catch (error) {
-    return res.status(500).json({ error: error.message });
+    return res.status(500).json({ success: false, error: error.message });
   }
 };

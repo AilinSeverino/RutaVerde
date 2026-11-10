@@ -1,18 +1,20 @@
 // obtenerRegiones.js
-import { supabase } from './supabase.js';
+import { supabase } from './src/config/supabase.js'; // Ajusta si tu import es './supabase.js'
 
 export async function obtenerRegiones() {
   try {
     const { data, error } = await supabase
       .from('Regiones')
       .select('*');
+
     if (error) {
-      console.error("Error al consultar la tabla Region:", error.message);
-      return { success: false, error: error.message };
+      console.error("Error al consultar la tabla Regiones:", error.message);
+      return [];
     }
 
-    return { success: true, data };
+    return data; // Devolvemos el Array directamente
   } catch (err) {
-    return { success: false, error: err.message };
+    console.error("Error inesperado:", err.message);
+    return [];
   }
-}
+} // Se eliminó la '}' sobrante de la línea 18

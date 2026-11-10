@@ -6,8 +6,8 @@ Eres un editor periodístico profesional especializado en noticias medioambienta
 Tu tarea es tomar el título y borrador de una noticia y reescribirlos para que sean más atractivos, claros y profesionales en español.
 
 Borrador:
-- Título: "${titulo}"
-- Contenido: "${descripcion}"
+- Título: "${titulo || ''}"
+- Contenido: "${descripcion || ''}"
 
 Responde ÚNICAMENTE con un objeto JSON válido con la siguiente estructura exacta:
 {
@@ -17,6 +17,10 @@ Responde ÚNICAMENTE con un objeto JSON válido con la siguiente estructura exac
 `;
 
   try {
+    if (!client || !client.chat || !client.chat.completions) {
+      throw new Error('La configuración de IA no está disponible.');
+    }
+
     const response = await client.chat.completions.create({
       model: 'openai/gpt-oss-20b', // 👈 El modelo de Groq que pediste
       messages: [

@@ -50,12 +50,8 @@ export const crearNoticia = async ({ titulo, subtitulo, cuerpo, id_usuario, file
   return data[0];
 };
 
-export async function obtenerNoticias () {
-  const { data, error } = await supabase
-    .from('Noticias')
-    .select('*')
-    .order('fecha_publicacion', { ascending: false });
-
-  if (error) throw new Error(error.message);
-  return data;
-};
+export async function obtenerNoticias() {
+  const result = await import('./noticiaService.js');
+  const data = await result.obtenerTodasLasNoticias();
+  return data.success ? data.data : [];
+}
