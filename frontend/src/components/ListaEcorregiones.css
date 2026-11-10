@@ -1,0 +1,106 @@
+.lista-eco {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', sans-serif;
+  overflow: hidden;
+}
+
+.lista-eco-header {
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid #e8e3d0;
+}
+
+.lista-eco-titulo {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.lista-eco-scroll {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.lista-eco-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.lista-eco-scroll::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+/* Item de la lista */
+.eco-item {
+  padding: 0.7rem 1.25rem;
+  border-bottom: 1px solid #f0ece0;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.eco-item:hover {
+  background-color: #f5f2e8;
+}
+
+.eco-item.activo {
+  background-color: #eaf5d6;
+  border-left: 3px solid var(--green-primary, #76c026);
+}
+
+.eco-item-nombre {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin: 0 0 0.15rem;
+}
+
+.eco-item-paises {
+  font-size: 0.7rem;
+  color: #888;
+  margin: 0;
+}
+
+/* Panel de detalle */
+.eco-detalle {
+  border-top: 2px solid var(--green-primary, #76c026);
+  background-color: #f7f4e9;
+  padding: 1rem 1.25rem 1.25rem;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.eco-detalle-nombre {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.5rem;
+}
+
+.eco-detalle-resumen {
+  font-size: 0.78rem;
+  color: #444;
+  line-height: 1.6;
+  margin: 0 0 0.75rem;
+}
+
+.eco-detalle-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.eco-tag {
+  background-color: #e2f0cc;
+  color: #3a6b10;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.2rem 0.6rem;
+  border-radius: 2rem;
+}

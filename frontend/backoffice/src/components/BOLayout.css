@@ -1,0 +1,10 @@
+.bo-layout {
+  min-height: 100vh;
+}
+
+.bo-layout__main {
+  margin-left: var(--sidebar-width);
+  margin-top: var(--topbar-height);
+  padding: 2rem;
+  min-height: calc(100vh - var(--topbar-height));
+}

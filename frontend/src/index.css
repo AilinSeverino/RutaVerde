@@ -1,0 +1,27 @@
+:root {
+  --bg-cream: #FDFBF0;
+  --green-primary: #76C026;
+  --green-primary-hover: #65A61F;
+  --green-secondary: #C1E695;
+  --green-secondary-hover: #B2D884;
+  --green-dark: #4A6D14;
+
+  --text-dark: #1A1A1A;
+  --text-main: #333333;
+  --text-muted: #8C8C8C;
+  --text-light: #A0A0A0;
+  --text-footer: #f4fff2a6;
+  --white: #FFFFFF;
+
+  --border-light: #E5E5E5;
+  --input-bg: #F0F2F5;
+  --input-focus-bg: #E8EAEF;
+
+  --shadow-color: rgba(0, 0, 0, 0.05);
+}
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #F2F7ED;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}

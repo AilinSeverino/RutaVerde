@@ -1,0 +1,18 @@
+.mapa-wrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+  background-color: #aad3df !important;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100% !important;
+  background: #aad3df !important;
+}
+
+.leaflet-overlay-pane path.ecorregion-seleccionada {
+  filter: grayscale(0.5);
+  transition: filter 0.2s ease;
+}

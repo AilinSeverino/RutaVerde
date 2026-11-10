@@ -1,0 +1,65 @@
+.bo-header {
+  position: fixed;
+  top: 0;
+  left: var(--sidebar-width);
+  right: 0;
+  height: var(--topbar-height);
+  background: #fff;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2rem;
+  z-index: 90;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.bo-header__titulo {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+}
+
+.bo-header__user {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.bo-header__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--green-primary);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.bo-header__user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.bo-header__user-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  line-height: 1.2;
+}
+
+.bo-header__badge {
+  font-size: 0.65rem;
+  font-weight: 600;
+  background: var(--green-secondary);
+  color: var(--green-dark);
+  padding: 1px 6px;
+  border-radius: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 1.6;
+}

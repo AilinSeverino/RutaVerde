@@ -1,0 +1,70 @@
+.timeline-item {
+  display: flex;
+  font-family: 'Inter', sans-serif;
+  background-color: #f5f7f2;
+  min-height: 100px;
+}
+
+.timeline-marker {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-right: 20px;
+  position: relative;
+  padding-left: 10%;
+}
+
+.marker-dot {
+  width: 24px;
+  height: 24px;
+  border: 2px solid #8cb811;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  z-index: 2;
+}
+
+.marker-inner-dot {
+  width: 12px;
+  height: 12px;
+  background-color: #8cb811;
+  border-radius: 50%;
+}
+
+.marker-line {
+  width: 2px;
+  background-color: #8cb811;
+  flex-grow: 1;
+  opacity: 0.5;
+  margin-top: 4px;
+  margin-bottom: 4px;
+}
+
+.timeline-content {
+  padding-bottom: 30px;
+  padding-left: 2%;
+}
+
+.timeline-year {
+  display: block;
+  color: #8cb811;
+  font-weight: 600;
+  font-size: 0.875rem;
+  margin-bottom: 4px;
+}
+
+.timeline-event-title {
+  margin: 0 0 8px 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.timeline-description {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  color: #4a4a4a;
+}

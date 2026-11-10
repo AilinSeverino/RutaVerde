@@ -1,0 +1,43 @@
+.histoland {
+  background-color: var(--bg-cream);
+  padding: 1.75rem 1.5rem;  /* era 3rem 1.5rem */
+  font-family: 'Inter', sans-serif;
+}
+
+.histoland-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.histoland-title {
+  color: var(--green-primary);
+  font-size: 1.4rem;         /* era 2rem */
+  font-weight: 700;
+  margin-bottom: 0.5rem;    /* era 1rem */
+  line-height: 1.2;
+}
+
+.histoland-description {
+  color: var(--text-main);
+  font-size: 0.85rem;        /* era 1rem */
+  line-height: 1.5;
+  max-width: 560px;          /* era 800px */
+}
+
+@media (min-width: 768px) {
+  .histoland {
+    padding: 2.25rem 2rem;  /* era 4rem 2rem */
+  }
+
+  .histoland-title {
+    font-size: 1.65rem;      /* era 2.5rem */
+  }
+
+  .histoland-description {
+    font-size: 0.875rem;     /* era 1.125rem */
+  }
+}
+.histoland-link {
+  color: inherit;
+  text-decoration: underline;
+}

@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg-cream: #FDFBF0;
+  --green-primary: #76C026;
+  --green-primary-hover: #65A61F;
+  --green-secondary: #C1E695;
+  --green-secondary-hover: #B2D884;
+  --green-dark: #4A6D14;
+  --text-dark: #1A1A1A;
+  --text-main: #333333;
+  --text-muted: #8C8C8C;
+  --border-light: #E5E5E5;
+
+  /* Backoffice specific */
+  --sidebar-bg: #1A2E0E;
+  --sidebar-width: 240px;
+  --topbar-height: 56px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #F2F7ED;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--text-main);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}

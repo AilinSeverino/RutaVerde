@@ -1,0 +1,45 @@
+/* App-level overrides only. All component styles live in their own .css files. */
+
+.bo-access-state {
+	min-height: 100vh;
+	display: grid;
+	place-items: center;
+	padding: 1.5rem;
+	background: #f2f7ed;
+}
+
+.bo-access-state section {
+	width: min(100%, 440px);
+	display: grid;
+	gap: 0.8rem;
+	padding: 2rem;
+	border: 1px solid #e5e5e5;
+	border-top: 4px solid var(--green-primary);
+	background: #fff;
+}
+
+.bo-access-state h1 {
+	color: var(--text-dark);
+	font-size: 1.4rem;
+}
+
+.bo-access-state p {
+	color: var(--green-dark);
+	font-size: 0.75rem;
+	font-weight: 700;
+	text-transform: uppercase;
+}
+
+.bo-access-state span {
+	color: var(--text-muted);
+}
+
+.bo-access-state a {
+	width: fit-content;
+	margin-top: 0.5rem;
+	padding: 0.65rem 0.9rem;
+	border-radius: 4px;
+	background: var(--sidebar-bg);
+	color: #fff;
+	font-weight: 600;
+}

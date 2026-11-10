@@ -1,0 +1,64 @@
+.mapa-page {
+  background-color: var(--bg-cream, #fcfaef);
+  min-height: calc(100vh - 64px);
+  font-family: 'Inter', sans-serif;
+}
+
+.mapa-layout {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  height: calc(100vh - 64px);
+}
+
+/* ---- Lado izquierdo ---- */
+.mapa-izquierda {
+  position: relative;
+  overflow: hidden;
+}
+
+.mapa-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: #b5d98a;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2.5rem;
+}
+
+.mapa-placeholder-label {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  letter-spacing: 0.02em;
+  pointer-events: none;
+}
+
+/* ---- Lado derecho ---- */
+.mapa-derecha {
+  background-color: #fff;
+  border-left: 1px solid #e8e3d0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 768px) {
+  .mapa-layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto;
+    height: auto;
+  }
+
+  .mapa-izquierda {
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+
+  .mapa-derecha {
+    border-left: none;
+    border-top: 1px solid #e8e3d0;
+    height: 50vh;
+  }
+}

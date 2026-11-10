@@ -1,0 +1,114 @@
+.inicio {
+  background-color: var(--green-primary);
+  padding: 2rem 1.5rem;
+  display: flex;
+  justify-content: center;
+  font-family: 'Inter', sans-serif;
+}
+
+.inicio-container {
+  max-width: 1300px;
+  width: 100%;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  align-items: center;
+  gap: 3rem;
+}
+
+.inicio-content {
+  flex: 0 0 450px;
+  color: var(--white);
+  text-align: left;
+}
+
+.inicio-subtitle {
+  font-size: 0.75rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+  opacity: 0.9;
+}
+
+.inicio-title {
+  font-size: 3rem;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+  max-width: 450px;
+}
+
+.inicio-description {
+  max-width: 420px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.btn-explorar {
+  background-color: var(--bg-cream);
+  color: var(--green-dark);
+  border: none;
+  padding: 0.55rem 1.4rem;  /* era 1rem 2.5rem */
+  border-radius: 2rem;
+  font-size: 0.85rem;        /* era 1.1rem */
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s ease, background-color 0.2s ease;
+}
+
+.btn-explorar:hover {
+  transform: translateY(-2px);
+  background-color: #f5f0d5;
+}
+
+.inicio-map-container {
+  flex: 0 0 300px;
+  display: flex;
+  justify-content: center;
+}
+
+.map-wrapper {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-radius: 1rem;
+  padding: 0.25rem;
+  border: 2px solid var(--green-dark);  /* era 4px */
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  width: 100%;
+  max-width: 280px;                     /* era 400px */
+}
+
+.map-image {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 0.75rem;
+}
+
+@media (max-width: 767px) {
+  .inicio-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .inicio-map-container {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .inicio-title {
+    font-size: 1.6rem;
+  }
+}
+.inicio-botones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.inicio-subtitle-link {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.inicio-subtitle-link:hover {
+  opacity: 0.8;
+}

@@ -1,0 +1,80 @@
+
+.mapa-interactivo {
+  background-color: var(--bg-cream, #fcfaef);
+  padding: 2rem 1.5rem;
+  font-family: 'Inter', sans-serif;
+}
+
+.mapa-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.mapa-header {
+  margin-bottom: 1.5rem;
+}
+
+.mapa-title {
+  font-size: 1.75rem;
+  color: #1a1a1a;
+  margin-bottom: 0.5rem;
+}
+
+.mapa-subtitle {
+  font-size: 0.9rem;
+  color: #666;
+  line-height: 1.4;
+}
+
+.map-visual {
+  background-color: #c5e1a5; /* Verde claro del mapa */
+  border-radius: 1rem;
+  aspect-ratio: 16 / 9;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-overlay-text {
+  position: absolute;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #33691e;
+  text-align: center;
+  pointer-events: none;
+}
+
+/* Representación de los puntos/marcadores */
+.marker {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.marker.green { background-color: #76c026; }
+.marker.red { background-color: #d32f2f; }
+
+/* Posicionamiento aproximado de los puntos de la imagen */
+.m1 { top: 40%; left: 15%; }
+.m2 { top: 30%; left: 25%; }
+.m3 { top: 70%; left: 30%; }
+.m4 { top: 45%; left: 50%; }
+.m5 { top: 80%; left: 70%; }
+.m6 { top: 60%; left: 85%; }
+.m7 { top: 25%; left: 90%; }
+
+@media (min-width: 768px) {
+  .mapa-interactivo {
+    padding: 3rem 2rem;
+  }
+  .mapa-title {
+    font-size: 2.25rem;
+  }
+}

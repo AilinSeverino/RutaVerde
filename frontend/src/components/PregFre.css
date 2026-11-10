@@ -1,0 +1,79 @@
+.faq-container {
+  background-color: #f5f7f2;
+  border-radius: 1rem;
+  padding: 1.5rem 2rem;
+  width: 100%;
+  max-width: 65rem;
+  margin: 1rem auto;
+  transition: background-color 0.3s ease;
+  overflow: hidden;
+}
+
+.faq-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+}
+
+.faq-question {
+  margin: 0;
+  font-family: sans-serif;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.faq-toggle {
+  background-color: #b9e08b;
+  border: none;
+  border-radius: 50%;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.3s ease, background-color 0.2s ease;
+}
+
+.faq-toggle:hover {
+  background-color: #a8d179;
+}
+
+.plus-icon {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #2d4a22;
+  line-height: 1;
+}
+
+/* Animación de despliegue */
+.faq-answer-wrapper {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease-out, margin-top 0.3s ease;
+}
+
+.open .faq-answer-wrapper {
+  grid-template-rows: 1fr;
+  margin-top: 1rem;
+}
+
+.faq-answer {
+  overflow: hidden;
+  font-family: sans-serif;
+  font-size: 1rem;
+  line-height: 1.6;
+  color: #4a4a4a;
+}
+
+.faq-answer p {
+  margin: 0;
+  padding-bottom: 0.5rem;
+}
+
+/* Rotación opcional para el icono si prefieres que el + gire */
+.open .faq-toggle {
+  background-color: #e0e0e0;
+}
