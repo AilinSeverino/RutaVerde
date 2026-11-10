@@ -61,7 +61,7 @@ export async function crearBaldosa(req, res) {
             tamanioNumero,
             comentarios ? comentarios.trim() : null,
             archivoImagen,
-            req.usuario?.id // o el idUsuario si lo tenés en la request
+            req.usuario.id_usuario
         );
 
         console.log("--- 📤 RESULTADO SERVICE ---", resultado);
