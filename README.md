@@ -23,5 +23,3 @@ Iniciar el proyecto: npm run dev
 adentro de la carpeta backend creas un archivo y lo llamas .env, ahi vas a pegar todos los valores que estan en el documento. 
 Iniciar el proyecto: npm run dev
 
-
-Más detalles de cada app en `frontend/README.md` y `frontend/CLAUDE.md`.
