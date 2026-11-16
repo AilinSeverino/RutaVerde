@@ -87,7 +87,12 @@ export async function loginUsuario(req, res) {
       });
     }
 
-    const mailResult = await enviarCodigoVerificacion(email, resultado.usuario.nombreC, resultado.codigo);
+   const mailResult = await Promise.race([
+      enviarCodigoVerificacion(email, resultado.usuario.nombreC, resultado.codigo),
+      new Promise((resolve) =>
+        setTimeout(() => resolve({ success: false, error: 'Timeout SMTP en red local' }), 3000)
+      )
+    ]);
 
     if (!mailResult.success) {
       console.warn(`[2FA FALLBACK] No se pudo enviar el mail (${mailResult.error}). Código para ${email}: ${resultado.codigo}`);

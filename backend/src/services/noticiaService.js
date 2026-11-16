@@ -30,12 +30,15 @@ function normalizarNoticia(n) {
 
 export async function obtenerTodasLasNoticias() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseAdmin()
       .from('Noticias')
       .select('*')
       .order('id_noticia', { ascending: false });
 
-    if (error) return { success: false, error: error.message };
+    if (error) {
+      console.error('Error Supabase obtenerTodasLasNoticias:', error);
+      return { success: false, error: error.message };
+    }
 
     return {
       success: true,
@@ -49,13 +52,17 @@ export async function obtenerTodasLasNoticias() {
 // --- Obtener Noticias APROBADAS (Vista pública) ---
 export async function obtenerNoticiasAprobadas() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseAdmin()
       .from('Noticias')
       .select('*')
       .eq('aprobada', true)
-      .order('fecha_publicacion', { ascending: false });
+      .order('id_noticia', { ascending: false });
 
-    if (error) return { success: false, error: error.message };
+    if (error) {
+      console.error('Error Supabase obtenerNoticiasAprobadas:', error);
+      return { success: false, error: error.message };
+    }
+
     return {
       success: true,
       data: (data || []).map(normalizarNoticia)
@@ -68,12 +75,17 @@ export async function obtenerNoticiasAprobadas() {
 // --- Obtener Noticias PENDIENTES (Backoffice) ---
 export async function obtenerNoticiasPendientes() {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await getSupabaseAdmin()
       .from('Noticias')
       .select('*')
-      .or('aprobada.is.null,aprobada.eq.false');
+      .or('aprobada.is.null,aprobada.eq.false')
+      .order('id_noticia', { ascending: false });
 
-    if (error) return { success: false, error: error.message };
+    if (error) {
+      console.error('Error Supabase obtenerNoticiasPendientes:', error);
+      return { success: false, error: error.message };
+    }
+
     return {
       success: true,
       data: (data || []).map(normalizarNoticia)
