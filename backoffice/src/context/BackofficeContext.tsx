@@ -283,10 +283,14 @@ export const BackofficeProvider: React.FC<{ children: ReactNode }> = ({ children
     eliminarUsuario: async (id) => {
       try {
         const res = await fetch(`${API_URL}/usuarios/${id}`, { method: 'DELETE', credentials: 'include' })
-        if (res.ok) {
-          setUsuarios(prev => prev.filter(u => u.id !== id))
-          addActividad(`Usuario #${id} eliminado`, 'usuario')
+        const body = await res.json().catch(() => ({}))
+        if (!res.ok) {
+          console.error('Error al eliminar usuario:', res.status, body)
+          alert(body.error || 'No se pudo eliminar el usuario.')
+          return
         }
+        setUsuarios(prev => prev.filter(u => u.id !== id))
+        addActividad(`Usuario #${id} eliminado`, 'usuario')
       } catch (err) {
         console.error(err)
       }

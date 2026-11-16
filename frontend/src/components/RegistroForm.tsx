@@ -57,12 +57,16 @@ const RegistroForm: React.FC = () => {
       if (region === 'chorotega') idRegionNum = 2;
       if (region === 'brunca') idRegionNum = 3;
 
-      const respuesta = await api.post('/api/registro', {
-        nombre,
-        email,
-        contrasenia,
-        region: idRegionNum
-      });
+      const respuesta = await api.post(
+        '/api/registro',
+        {
+          nombre,
+          email,
+          contrasenia,
+          region: idRegionNum
+        },
+        { withCredentials: true }
+      );
 
       if (respuesta.data.error) {
         setError(respuesta.data.error);

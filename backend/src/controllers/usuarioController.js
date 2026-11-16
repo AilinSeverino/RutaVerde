@@ -96,18 +96,40 @@ export async function cambiarRolUsuario(req, res) {
 export async function eliminarUsuario(req, res) {
     try {
         const { id } = req.params;
+        const idNum = Number(id);
+        const admin = getSupabaseAdmin();
 
-        const { data, error } = await getSupabaseAdmin()
+        const updBaldosa = await admin.from('Baldosa').update({ id_usuario: null }).eq('id_usuario', idNum);
+        if (updBaldosa.error) {
+            await admin.from('Baldosa').delete().eq('id_usuario', idNum);
+        }
+
+        const updNoticias = await admin.from('Noticias').update({ id_usuario: null }).eq('id_usuario', idNum);
+        if (updNoticias.error) {
+            await admin.from('Noticias').delete().eq('id_usuario', idNum);
+        }
+
+        const updNoticia = await admin.from('Noticia').update({ id_usuario: null }).eq('id_usuario', idNum);
+        if (updNoticia.error) {
+            await admin.from('Noticia').delete().eq('id_usuario', idNum);
+        }
+
+        const { data, error } = await admin
             .from('Usuarios')
             .delete()
-            .eq('id_usuario', id)
+            .eq('id_usuario', idNum)
             .select();
 
         if (error) {
+            console.error('Error al eliminar usuario en Supabase:', error);
             return res.status(400).json({ success: false, error: error.message });
         }
 
-        return res.status(200).json({ success: true, data: data[0] || null });
+        if (!data || data.length === 0) {
+            return res.status(404).json({ success: false, error: 'Usuario no encontrado.' });
+        }
+
+        return res.status(200).json({ success: true, data: data[0] });
     } catch (error) {
         return res.status(500).json({ success: false, error: error.message });
     }

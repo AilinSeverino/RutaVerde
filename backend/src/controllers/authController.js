@@ -45,7 +45,15 @@ export async function registrarUsuario(req, res) {
     const resultado = await authService.registro(nombre, email, contrasenia, region);
 
     if (resultado.success) {
-      return res.status(201).json(resultado);
+      const usuarioCreado = resultado.usuario || resultado.data;
+      if (usuarioCreado) {
+        const sessionToken = crearSesionUsuario(usuarioCreado);
+        res.cookie('rv_user_session', sessionToken, opcionesCookieAdmin);
+      }
+      return res.status(201).json({
+        ...resultado,
+        usuario: usuarioCreado
+      });
     }
 
     return res.status(400).json(resultado);

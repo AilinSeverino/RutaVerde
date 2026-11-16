@@ -1,7 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { noticias } from '../data/noticias';
+import { obtenerNoticiasPublicadas } from '../data/noticias';
 import type { Noticia } from '../data/noticias';
 import NoticiaModal from './NoticiaModal';
 import SubirNoticiaModal from './SubirNoticiaModal';
@@ -61,7 +61,7 @@ const EditModal: React.FC<EditModalProps> = ({ onClose }) => {
       // 2. Si el nombre cambió, realizamos la petición enviando idUsuario
       if (nombreForm && nombreForm !== nombreActual) {
         const resNombre = await api.put('/api/perfil/nombre', {
-          idUsuario: Number(idUsuario), // Enviamos 'idUsuario' coincidiendo con el backend
+          idUsuario: Number(idUsuario),
           nombre: nombreForm
         });
 
@@ -89,8 +89,6 @@ const EditModal: React.FC<EditModalProps> = ({ onClose }) => {
       }
 
       // 3. Armamos el objeto con los datos actualizados
-      // Solo se actualiza `data` si el usuario ya venía envuelto en ese objeto;
-      // si no, crearlo con 2 campos taparía el resto (email, ubicación, etc.)
       const usuarioActualizado = {
         ...usuario,
         nombreC: nuevoNombreC,
@@ -150,6 +148,21 @@ const PerfilUser: React.FC = () => {
   const [modalPerfil, setModalPerfil] = useState(false);
   const [modalNoticia, setModalNoticia] = useState(false);
   const [noticiaAbierta, setNoticiaAbierta] = useState<Noticia | null>(null);
+  const [noticiasReales, setNoticiasReales] = useState<Noticia[]>([]);
+
+  useEffect(() => {
+    let cancelado = false;
+
+    obtenerNoticiasPublicadas()
+      .then((publicadas) => {
+        if (!cancelado) setNoticiasReales(publicadas);
+      })
+      .catch((error) => console.error('Error al cargar noticias en perfil:', error));
+
+    return () => {
+      cancelado = true;
+    };
+  }, []);
 
   if (!usuario) return null;
 
@@ -218,20 +231,24 @@ const PerfilUser: React.FC = () => {
 
         <div className="pu-section-recomendadas">
           <h2 className="pu-section-title">Noticias recomendadas</h2>
-          <div className="pu-noticias-grid">
-            {noticias.slice(0, 3).map(noti => (
-              <article key={noti.id} className="pu-noticia-card" onClick={() => handleNoticiaClick(noti)}>
-                <div className="pu-noticia-img-wrap">
-                  <img src={noti.imagen} alt={noti.titulo} className="pu-noticia-img" />
-                  <span className="pu-noticia-fecha">{noti.fecha}</span>
-                </div>
-                <div className="pu-noticia-body">
-                  <h3 className="pu-noticia-titulo">{noti.titulo}</h3>
-                  <p className="pu-noticia-desc">{noti.descripcion}</p>
-                </div>
-              </article>
-            ))}
-          </div>
+          {noticiasReales.length === 0 ? (
+            <p>Todavía no hay noticias publicadas.</p>
+          ) : (
+            <div className="pu-noticias-grid">
+              {noticiasReales.slice(0, 3).map(noti => (
+                <article key={noti.id} className="pu-noticia-card" onClick={() => handleNoticiaClick(noti)}>
+                  <div className="pu-noticia-img-wrap">
+                    <img src={noti.imagen} alt={noti.titulo} className="pu-noticia-img" />
+                    <span className="pu-noticia-fecha">{noti.fecha}</span>
+                  </div>
+                  <div className="pu-noticia-body">
+                    <h3 className="pu-noticia-titulo">{noti.titulo}</h3>
+                    <p className="pu-noticia-desc">{noti.descripcion}</p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
