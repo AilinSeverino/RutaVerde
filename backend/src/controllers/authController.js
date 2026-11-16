@@ -90,7 +90,12 @@ export async function loginUsuario(req, res) {
     const mailResult = await enviarCodigoVerificacion(email, resultado.usuario.nombreC, resultado.codigo);
 
     if (!mailResult.success) {
-      return res.status(502).json({ success: false, error: mailResult.error || 'No se pudo enviar el código de verificación.' });
+      console.warn(`[2FA FALLBACK] No se pudo enviar el mail (${mailResult.error}). Código para ${email}: ${resultado.codigo}`);
+      return res.status(200).json({
+        success: true,
+        requiereCodigo: true,
+        message: 'Código generado. Si no llega al correo, revisá la terminal del servidor.'
+      });
     }
 
     return res.status(200).json({
